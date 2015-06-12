@@ -14,6 +14,6 @@
  */
 package edu.uci.ics.hyracks.data.std.api;
 
-public interface IHashable {
-    public int hash();
+public interface IHashableForStringWithoutLengthByte {
+    public int hash(int length);
 }

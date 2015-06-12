@@ -21,6 +21,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.util.ExperimentProfiler;
+import edu.uci.ics.hyracks.api.util.StopWatch;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
 
@@ -44,8 +46,52 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
     }
 
     @Override
+<<<<<<< HEAD
     void sortTupleReferences() throws HyracksDataException {
         sort(tPointers, 0, tupleCount);
+=======
+    public void flushFrames(IFrameWriter writer) throws HyracksDataException {
+    	this.flushFrames(writer, null);
+    }
+
+    @Override
+    public void flushFrames(IFrameWriter writer, StopWatch profilerSW) throws HyracksDataException {
+        appender.reset(outFrame, true);
+        for (int ptr = 0; ptr < tupleCount; ++ptr) {
+            int i = tPointers[ptr * 4];
+            int tStart = tPointers[ptr * 4 + 1];
+            int tEnd = tPointers[ptr * 4 + 2];
+            ByteBuffer buffer = buffers.get(i);
+            fta1.reset(buffer);
+            if (!appender.append(fta1, tStart, tEnd)) {
+                // For Experiment Profiler
+                if (ExperimentProfiler.PROFILE_MODE) {
+                    profilerSW.suspend();
+                }
+                FrameUtils.flushFrame(outFrame, writer);
+                // For Experiment Profiler
+                if (ExperimentProfiler.PROFILE_MODE) {
+                    profilerSW.resume();
+                }
+                appender.reset(outFrame, true);
+                if (!appender.append(fta1, tStart, tEnd)) {
+                    throw new HyracksDataException("Record size (" + (tEnd - tStart) + ") larger than frame size ("
+                            + appender.getBuffer().capacity() + ")");
+                }
+            }
+        }
+        if (appender.getTupleCount() > 0) {
+            // For Experiment Profiler
+            if (ExperimentProfiler.PROFILE_MODE) {
+                profilerSW.suspend();
+            }
+            FrameUtils.flushFrame(outFrame, writer);
+            // For Experiment Profiler
+            if (ExperimentProfiler.PROFILE_MODE) {
+                profilerSW.resume();
+            }
+        }
+>>>>>>> Full-text search implemented.
     }
 
     void sort(int[] tPointers, int offset, int length) throws HyracksDataException {
