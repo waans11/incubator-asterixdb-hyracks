@@ -14,6 +14,8 @@
  */
 package edu.uci.ics.hyracks.data.std.api;
 
-public interface IHashable {
-    public int hash();
+public interface IComparableForStringWithoutLengthByte {
+    // For String Type only. If a string does not include the length (2 byte) in the beginning and
+    // the length for a string is provided by the parameter
+    public int compareToWithoutLengthByte(byte[] bytes, int start, int length);
 }

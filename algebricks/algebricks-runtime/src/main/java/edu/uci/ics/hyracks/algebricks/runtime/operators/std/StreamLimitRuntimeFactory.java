@@ -114,9 +114,9 @@ public class StreamLimitRuntimeFactory extends AbstractOneInputOneOutputRuntimeF
                     } else if (toWrite > 0) {
                         toWrite--;
                         if (projectionList != null) {
-                            appendProjectionToFrame(t, projectionList);
+                            appendProjectionToFrame(t, projectionList, null);
                         } else {
-                            appendTupleToFrame(t);
+                            appendTupleToFrame(t, null);
                         }
                     } else {
                         // close();
