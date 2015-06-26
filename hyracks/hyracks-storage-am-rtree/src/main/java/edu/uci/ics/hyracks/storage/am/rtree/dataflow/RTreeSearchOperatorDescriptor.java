@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,12 +46,12 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IBinaryComparatorFactory[] comparatorFactories, int[] keyFields,
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
             INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isIndexOnlyPlanEnabled) {
 
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, dataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
                 NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackFactory,
-                NoOpOperationCallbackFactory.INSTANCE);
+                NoOpOperationCallbackFactory.INSTANCE, isIndexOnlyPlanEnabled);
         this.keyFields = keyFields;
         this.minFilterFieldIndexes = minFilterFieldIndexes;
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
