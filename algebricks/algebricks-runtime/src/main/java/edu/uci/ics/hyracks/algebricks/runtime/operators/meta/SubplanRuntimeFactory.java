@@ -110,7 +110,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                     if (!smthWasWritten) {
                         // the case when we need to write nulls
                         appendNullsToTuple();
-                        appendToFrameFromTupleBuilder(tb, null);
+                        appendToFrameFromTupleBuilder(tb);
                     }
                 }
 

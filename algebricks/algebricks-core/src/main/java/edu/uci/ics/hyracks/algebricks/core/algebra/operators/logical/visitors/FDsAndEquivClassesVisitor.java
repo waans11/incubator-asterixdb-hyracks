@@ -68,7 +68,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggr
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
@@ -449,11 +448,11 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
         return null;
     }
 
-    @Override
-    public Void visitSplitOperator(SplitOperator op, IOptimizationContext ctx) throws AlgebricksException {
-        propagateFDsAndEquivClasses(op, ctx);
-        return null;
-    }
+//    @Override
+//    public Void visitSplitOperator(SplitOperator op, IOptimizationContext ctx) throws AlgebricksException {
+//        propagateFDsAndEquivClasses(op, ctx);
+//        return null;
+//    }
 
     @Override
     public Void visitSubplanOperator(SubplanOperator op, IOptimizationContext ctx) throws AlgebricksException {
@@ -577,7 +576,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     /***
      * Propagated equivalent classes from the child to the current operator, based
      * on the used variables of the current operator.
-     * 
+     *
      * @param op
      *            , the current operator
      * @param ctx
@@ -743,7 +742,7 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     /**
      * Propagate equivalences that carried in expressions to the variables that
      * they are assigned to.
-     * 
+     *
      * @param eqClasses
      *            an equivalent class map
      * @param assignExprs
