@@ -22,20 +22,22 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
+import edu.uci.ics.hyracks.dataflow.common.util.IntSerDeUtils;
 import edu.uci.ics.hyracks.dataflow.std.sort.buffermanager.IFrameBufferManager;
 
-public class FrameSorterQuickSort extends AbstractFrameSorter {
+public class FrameSorterMergeSort extends AbstractFrameSorter {
 
+    private int[] tPointersTemp;
     private FrameTupleAccessor fta2;
 
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
+    public FrameSorterMergeSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor) throws HyracksDataException {
         this(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
                 Integer.MAX_VALUE);
     }
 
-    public FrameSorterQuickSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
+    public FrameSorterMergeSort(IHyracksTaskContext ctx, IFrameBufferManager bufferManager, int[] sortFields,
             INormalizedKeyComputerFactory firstKeyNormalizerFactory, IBinaryComparatorFactory[] comparatorFactories,
             RecordDescriptor recordDescriptor, int outputLimit) throws HyracksDataException {
         super(ctx, bufferManager, sortFields, firstKeyNormalizerFactory, comparatorFactories, recordDescriptor,
@@ -45,78 +47,86 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
 
     @Override
     void sortTupleReferences() throws HyracksDataException {
-        sort(tPointers, 0, tupleCount);
+        if (tPointersTemp == null || tPointersTemp.length < tPointers.length) {
+            tPointersTemp = new int[tPointers.length];
+        }
+        sort(0, tupleCount);
     }
 
-    void sort(int[] tPointers, int offset, int length) throws HyracksDataException {
-        int m = offset + (length >> 1);
-        int mi = tPointers[m * 4];
-        int mj = tPointers[m * 4 + 1];
-        int mv = tPointers[m * 4 + 3];
+    @Override
+    public void close() {
+        super.close();
+        tPointersTemp = null;
+    }
 
-        int a = offset;
-        int b = a;
-        int c = offset + length - 1;
-        int d = c;
-        while (true) {
-            while (b <= c) {
-                int cmp = compare(tPointers, b, mi, mj, mv);
-                if (cmp > 0) {
-                    break;
+    void sort(int offset, int length) throws HyracksDataException {
+        int step = 1;
+        int end = offset + length;
+        /** bottom-up merge */
+        while (step < length) {
+            /** merge */
+            for (int i = offset; i < end; i += 2 * step) {
+                int next = i + step;
+                if (next < end) {
+                    merge(i, next, step, Math.min(step, end - next));
+                } else {
+                    System.arraycopy(tPointers, i * 4, tPointersTemp, i * 4, (end - i) * 4);
                 }
-                if (cmp == 0) {
-                    swap(tPointers, a++, b);
-                }
-                ++b;
             }
-            while (c >= b) {
-                int cmp = compare(tPointers, c, mi, mj, mv);
-                if (cmp < 0) {
-                    break;
-                }
-                if (cmp == 0) {
-                    swap(tPointers, c, d--);
-                }
-                --c;
+            /** prepare next phase merge */
+            step *= 2;
+            int[] tmp = tPointersTemp;
+            tPointersTemp = tPointers;
+            tPointers = tmp;
+        }
+    }
+
+    /**
+     * Merge two subarrays into one
+     */
+    private void merge(int start1, int start2, int len1, int len2) throws HyracksDataException {
+        int targetPos = start1;
+        int pos1 = start1;
+        int pos2 = start2;
+        int end1 = start1 + len1 - 1;
+        int end2 = start2 + len2 - 1;
+        while (pos1 <= end1 && pos2 <= end2) {
+            int cmp = compare(pos1, pos2);
+            if (cmp <= 0) {
+                copy(pos1, targetPos);
+                pos1++;
+            } else {
+                copy(pos2, targetPos);
+                pos2++;
             }
-            if (b > c)
-                break;
-            swap(tPointers, b++, c--);
+            targetPos++;
         }
-
-        int s;
-        int n = offset + length;
-        s = Math.min(a - offset, b - a);
-        vecswap(tPointers, offset, b - s, s);
-        s = Math.min(d - c, n - d - 1);
-        vecswap(tPointers, b, n - s, s);
-
-        if ((s = b - a) > 1) {
-            sort(tPointers, offset, s);
+        if (pos1 <= end1) {
+            int rest = end1 - pos1 + 1;
+            System.arraycopy(tPointers, pos1 * 4, tPointersTemp, targetPos * 4, rest * 4);
         }
-        if ((s = d - c) > 1) {
-            sort(tPointers, n - s, s);
+        if (pos2 <= end2) {
+            int rest = end2 - pos2 + 1;
+            System.arraycopy(tPointers, pos2 * 4, tPointersTemp, targetPos * 4, rest * 4);
         }
     }
 
-    private void swap(int x[], int a, int b) {
-        for (int i = 0; i < 4; ++i) {
-            int t = x[a * 4 + i];
-            x[a * 4 + i] = x[b * 4 + i];
-            x[b * 4 + i] = t;
-        }
+    private void copy(int src, int dest) {
+        tPointersTemp[dest * 4] = tPointers[src * 4];
+        tPointersTemp[dest * 4 + 1] = tPointers[src * 4 + 1];
+        tPointersTemp[dest * 4 + 2] = tPointers[src * 4 + 2];
+        tPointersTemp[dest * 4 + 3] = tPointers[src * 4 + 3];
     }
 
-    private void vecswap(int x[], int a, int b, int n) {
-        for (int i = 0; i < n; i++, a++, b++) {
-            swap(x, a, b);
-        }
-    }
-
-    private int compare(int[] tPointers, int tp1, int tp2i, int tp2j, int tp2v) throws HyracksDataException {
+    private int compare(int tp1, int tp2) throws HyracksDataException {
         int i1 = tPointers[tp1 * 4];
         int j1 = tPointers[tp1 * 4 + 1];
         int v1 = tPointers[tp1 * 4 + 3];
+
+        int tp2i = tPointers[tp2 * 4];
+        int tp2j = tPointers[tp2 * 4 + 1];
+        int tp2v = tPointers[tp2 * 4 + 3];
+
         if (v1 != tp2v) {
             return ((((long) v1) & 0xffffffffL) < (((long) tp2v) & 0xffffffffL)) ? -1 : 1;
         }
@@ -130,12 +140,12 @@ public class FrameSorterQuickSort extends AbstractFrameSorter {
         fta2.reset(buf2);
         for (int f = 0; f < comparators.length; ++f) {
             int fIdx = sortFields[f];
-            int f1Start = fIdx == 0 ? 0 : buf1.getInt(j1 + (fIdx - 1) * 4);
-            int f1End = buf1.getInt(j1 + fIdx * 4);
+            int f1Start = fIdx == 0 ? 0 : IntSerDeUtils.getInt(b1, j1 + (fIdx - 1) * 4);
+            int f1End = IntSerDeUtils.getInt(b1, j1 + fIdx * 4);
             int s1 = j1 + inputTupleAccessor.getFieldSlotsLength() + f1Start;
             int l1 = f1End - f1Start;
-            int f2Start = fIdx == 0 ? 0 : buf2.getInt(j2 + (fIdx - 1) * 4);
-            int f2End = buf2.getInt(j2 + fIdx * 4);
+            int f2Start = fIdx == 0 ? 0 : IntSerDeUtils.getInt(b2, j2 + (fIdx - 1) * 4);
+            int f2End = IntSerDeUtils.getInt(b2, j2 + fIdx * 4);
             int s2 = j2 + fta2.getFieldSlotsLength() + f2Start;
             int l2 = f2End - f2Start;
             int c = comparators[f].compare(b1, s1, l1, b2, s2, l2);

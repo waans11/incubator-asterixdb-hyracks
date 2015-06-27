@@ -51,7 +51,6 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.RunningAggr
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ScriptOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SinkOperator;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.TokenizeOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
@@ -302,13 +301,13 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         return buffer.toString();
     }
 
-    @Override
-    public String visitSplitOperator(SplitOperator op, Integer indent) throws AlgebricksException {
-        StringBuilder buffer = new StringBuilder();
-        LogicalVariable conditionalSplitVar = op.getConditionVar();
-        addIndent(buffer, indent).append("split [" + conditionalSplitVar + "]");
-        return buffer.toString();
-    }
+//    @Override
+//    public String visitSplitOperator(SplitOperator op, Integer indent) throws AlgebricksException {
+//        StringBuilder buffer = new StringBuilder();
+//        LogicalVariable conditionalSplitVar = op.getConditionVar();
+//        addIndent(buffer, indent).append("split [" + conditionalSplitVar + "]");
+//        return buffer.toString();
+//    }
 
     @Override
     public String visitMaterializeOperator(MaterializeOperator op, Integer indent) throws AlgebricksException {

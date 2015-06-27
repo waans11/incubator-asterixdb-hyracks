@@ -25,9 +25,6 @@ import edu.uci.ics.hyracks.algebricks.runtime.operators.base.AbstractOneInputOne
 import edu.uci.ics.hyracks.api.comm.IFrameTupleAccessor;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.api.util.ExperimentProfiler;
-import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.StopWatch;
 import edu.uci.ics.hyracks.data.std.api.IPointable;
 import edu.uci.ics.hyracks.data.std.primitive.VoidPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -90,35 +87,8 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
             private final ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(projectionList.length);
             private boolean first = true;
 
-            // For Experiment Profiler
-			private StopWatch profilerSW = null;
-			private String nodeJobSignature;
-			private String taskId;
-
             @Override
             public void open() throws HyracksDataException {
-				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
-					profilerSW = new StopWatch();
-					profilerSW.start();
-
-					// The key of this job: nodeId + JobId + Joblet hash
-					// code
-					nodeJobSignature = ctx.getJobletContext()
-							.getApplicationContext().getNodeId()
-							+ ctx.getJobletContext().getJobId()
-							+ ctx.getJobletContext().hashCode();
-
-					// taskId: partition + taskId
-					taskId = ctx.getTaskAttemptId() + this.toString()
-							+ profilerSW.getStartTimeStamp();
-
-					// Initialize the counter for this runtime instance
-					OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler
-							.add(nodeJobSignature, taskId, "init", false);
-					System.out.println("RUNNING_AGGREGATE start " + taskId);
-				}
-
                 initAccessAppendRef(ctx);
                 if (first) {
                     first = false;
@@ -143,21 +113,13 @@ public class RunningAggregateRuntimeFactory extends AbstractOneInputOneOutputRun
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
-					profilerSW.resume();
-				}
                 tAccess.reset(buffer);
                 int nTuple = tAccess.getTupleCount();
                 for (int t = 0; t < nTuple; t++) {
                     tRef.reset(tAccess, t);
                     produceTuple(tupleBuilder, tAccess, t, tRef);
-                    appendToFrameFromTupleBuilder(tupleBuilder, profilerSW);
+                    appendToFrameFromTupleBuilder(tupleBuilder);
                 }
-				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
-					profilerSW.suspend();
-				}
             }
 
             private void produceTuple(ArrayTupleBuilder tb, IFrameTupleAccessor accessor, int tIndex,

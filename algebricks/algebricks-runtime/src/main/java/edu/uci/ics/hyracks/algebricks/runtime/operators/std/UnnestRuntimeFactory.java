@@ -132,7 +132,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                             } else {
 
                                 if (!outColIsProjected && positionWriter == null) {
-                                    appendProjectionToFrame(t, projectionList, null);
+                                    appendProjectionToFrame(t, projectionList);
                                 } else {
                                     for (int f = 0; f < outColPos; f++) {
                                         tupleBuilder.addField(tAccess, t, f);
@@ -152,7 +152,7 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                                     positionWriter.write(tupleBuilder.getDataOutput(), offset + positionIndex++);
                                     tupleBuilder.addFieldEndOffset();
                                 }
-                                appendToFrameFromTupleBuilder(tupleBuilder, null);
+                                appendToFrameFromTupleBuilder(tupleBuilder);
                             }
                         } while (goon);
                     } catch (AlgebricksException | IOException ae) {
