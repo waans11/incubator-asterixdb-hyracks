@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.uci.ics.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
@@ -336,7 +337,7 @@ public class BTree extends AbstractTreeIndex {
     private void update(ITupleReference tuple, BTreeOpContext ctx) throws HyracksDataException, TreeIndexException {
         // This call only allows updating of non-key fields.
         // Updating a tuple's key necessitates deleting the old entry, and inserting the new entry.
-        // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert). 
+        // The user of the BTree is responsible for dealing with non-key updates (i.e., doing a delete + insert).
         if (fieldCount == ctx.cmp.getKeyFieldCount()) {
             throw new BTreeNotUpdateableException("Cannot perform updates when the entire tuple forms the key.");
         }
@@ -640,7 +641,7 @@ public class BTree extends AbstractTreeIndex {
                                 node = isConsistent(pageId, ctx);
                                 if (node != null) {
                                     isReadLatched = true;
-                                    // Descend the tree again.                                
+                                    // Descend the tree again.
                                     continue;
                                 } else {
                                     // Pop pageLsn of this page (version seen by this op during descent).
@@ -662,7 +663,7 @@ public class BTree extends AbstractTreeIndex {
                                             BufferedFileHandle.getDiskPageId(fileId, pageId), false);
                                     interiorNode.acquireWriteLatch();
                                     try {
-                                        // Insert or update op. Both can cause split keys to propagate upwards. 
+                                        // Insert or update op. Both can cause split keys to propagate upwards.
                                         insertInterior(interiorNode, pageId, ctx.splitKey.getTuple(), ctx);
                                     } finally {
                                         interiorNode.releaseWriteLatch(true);
@@ -903,6 +904,14 @@ public class BTree extends AbstractTreeIndex {
             return new BTreeRangeSearchCursor(leafFrame, exclusive);
         }
 
+		@Override
+		public IIndexCursor createSearchCursor(boolean exclusive,
+				boolean useOperationCallbackProceedReturnResult,
+				RecordDescriptor rDesc) {
+			// This method is only required for the LSM based indexes
+			return null;
+		}
+
         @Override
         public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
                 TreeIndexException {
@@ -933,6 +942,8 @@ public class BTree extends AbstractTreeIndex {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
             return new BTreeCountingSearchCursor(leafFrame, false);
         }
+
+
     }
 
     @Override

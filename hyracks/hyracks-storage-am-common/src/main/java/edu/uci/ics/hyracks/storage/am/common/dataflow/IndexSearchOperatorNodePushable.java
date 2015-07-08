@@ -96,7 +96,8 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected abstract void resetSearchPredicate(int tupleIndex);
 
     protected IIndexCursor createCursor() {
-        return indexAccessor.createSearchCursor(false);
+        return indexAccessor.createSearchCursor(false, opDesc.getUseOpercationCallbackProceedReturnResult(),
+                opDesc.getRecordDescriptor());
     }
 
     protected abstract int getFieldCount();
@@ -144,10 +145,13 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected void writeSearchResults(int tupleIndex) throws Exception {
         boolean matched = false;
+        int count = 0;
         while (cursor.hasNext()) {
             matched = true;
             tb.reset();
             cursor.next();
+            count++;
+            System.out.println("cursor count:" + count);
             if (retainInput) {
                 frameTuple.reset(accessor, tupleIndex);
                 for (int i = 0; i < frameTuple.getFieldCount(); i++) {
@@ -160,8 +164,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                 tb.addFieldEndOffset();
             }
-            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
-                    tb.getSize());
+            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
         }
 
         if (!matched && retainInput && retainNull) {

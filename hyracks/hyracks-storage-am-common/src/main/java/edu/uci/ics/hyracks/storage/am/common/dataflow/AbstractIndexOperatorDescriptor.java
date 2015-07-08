@@ -132,7 +132,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     }
 
     @Override
-    public boolean getIsIndexOnlyPlanEnabled() {
+    public boolean getUseOpercationCallbackProceedReturnResult() {
         return isIndexOnlyPlanEnabled;
     }
 
