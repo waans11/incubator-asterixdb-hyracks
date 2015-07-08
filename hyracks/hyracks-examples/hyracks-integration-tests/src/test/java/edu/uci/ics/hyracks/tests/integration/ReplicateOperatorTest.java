@@ -36,7 +36,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import edu.uci.ics.hyracks.dataflow.std.file.DelimitedDataTupleParserFactory;
 import edu.uci.ics.hyracks.dataflow.std.file.FileScanOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.file.FileSplit;
-import edu.uci.ics.hyracks.dataflow.std.misc.SplitOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.misc.ReplicateOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
 import edu.uci.ics.hyracks.tests.util.ResultSerializerFactoryProvider;
 
@@ -82,7 +82,7 @@ public class ReplicateOperatorTest extends AbstractIntegrationTest {
                 inputSplits), stringParser, stringRec);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scanOp, locations);
 
-        SplitOperatorDescriptor splitOp = new SplitOperatorDescriptor(spec, stringRec, outputArity);
+        ReplicateOperatorDescriptor splitOp = new ReplicateOperatorDescriptor(spec, stringRec, outputArity);
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, splitOp, locations);
 
         IOperatorDescriptor outputOp[] = new IOperatorDescriptor[outputFile.length];

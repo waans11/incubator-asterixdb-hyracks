@@ -22,21 +22,22 @@ import edu.uci.ics.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import edu.uci.ics.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
+import edu.uci.ics.hyracks.algebricks.core.algebra.operators.logical.SplitOperator;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
 import edu.uci.ics.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import edu.uci.ics.hyracks.algebricks.core.jobgen.impl.JobGenHelper;
+import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.dataflow.std.misc.ReplicateOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.misc.SplitOperatorDescriptor;
 
-public class ReplicatePOperator extends AbstractPhysicalOperator {
+public class SplitPOperator extends AbstractPhysicalOperator {
 
     @Override
     public PhysicalOperatorTag getOperatorTag() {
-        return PhysicalOperatorTag.REPLICATE;
+        return PhysicalOperatorTag.SPLIT;
     }
 
     @Override
@@ -61,13 +62,26 @@ public class ReplicatePOperator extends AbstractPhysicalOperator {
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         IOperatorDescriptorRegistry spec = builder.getJobSpec();
-        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), propagatedSchema, context);
+        RecordDescriptor recDescriptor = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op),
+                propagatedSchema, context);
 
-        ReplicateOperator rop = (ReplicateOperator) op;
-        int outputArity = rop.getOutputArity();
-        boolean[] outputMaterializationFlags = rop.getOutputMaterializationFlags();
+        IBinaryIntegerInspectorFactory intInsepctorFactory = context.getBinaryIntegerInspectorFactory();
 
-        ReplicateOperatorDescriptor splitOpDesc = new ReplicateOperatorDescriptor(spec, recDescriptor, outputArity, outputMaterializationFlags);
+        SplitOperator sop = (SplitOperator) op;
+        int outputArity = sop.getOutputArity();
+
+        int pos = inputSchemas[0].findVariable(sop.getConditionVar());
+        if (pos < 0) {
+            throw new AlgebricksException("SPLIT operator: could not find the variable " + sop.getConditionVar() + ".");
+        }
+
+        int conditionalVarFieldPos = pos;
+        boolean[] outputMaterializationFlags = sop.getOutputMaterializationFlags();
+
+        SplitOperatorDescriptor splitOpDesc = null;
+        splitOpDesc = new SplitOperatorDescriptor(spec, recDescriptor, outputArity, outputMaterializationFlags,
+                intInsepctorFactory, conditionalVarFieldPos);
+
         contributeOpDesc(builder, (AbstractLogicalOperator) op, splitOpDesc);
         ILogicalOperator src = op.getInputs().get(0).getValue();
         builder.contributeGraphEdge(src, 0, op, 0);
@@ -76,7 +90,7 @@ public class ReplicatePOperator extends AbstractPhysicalOperator {
     @Override
     public Pair<int[], int[]> getInputOutputDependencyLabels(ILogicalOperator op) {
         int[] inputDependencyLabels = new int[] { 0 };
-        ReplicateOperator rop = (ReplicateOperator) op;
+        SplitOperator rop = (SplitOperator) op;
         int[] outputDependencyLabels = new int[rop.getOutputArity()];
         // change the labels of outputs that requires materialization to 1
         boolean[] outputMaterializationFlags = rop.getOutputMaterializationFlags();

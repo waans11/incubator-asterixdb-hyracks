@@ -51,5 +51,5 @@ public interface IIndexOperatorDescriptor extends IActivity {
 
     public ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
 
-    public boolean getIsIndexOnlyPlanEnabled();
+    public boolean getUseOpercationCallbackProceedReturnResult();
 }

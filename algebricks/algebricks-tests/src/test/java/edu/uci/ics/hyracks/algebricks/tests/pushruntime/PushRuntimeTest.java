@@ -92,7 +92,7 @@ import edu.uci.ics.hyracks.dataflow.std.file.LineFileWriteOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.IAggregatorDescriptorFactory;
 import edu.uci.ics.hyracks.dataflow.std.group.hash.HashGroupOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.group.preclustered.PreclusteredGroupOperatorDescriptor;
-import edu.uci.ics.hyracks.dataflow.std.misc.SplitOperatorDescriptor;
+import edu.uci.ics.hyracks.dataflow.std.misc.ReplicateOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.sort.InMemorySortOperatorDescriptor;
 
 public class PushRuntimeTest {
@@ -667,7 +667,7 @@ public class PushRuntimeTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, scanOp,
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });
 
-        SplitOperatorDescriptor splitOp = new SplitOperatorDescriptor(spec, stringRec, outputArity);
+        ReplicateOperatorDescriptor splitOp = new ReplicateOperatorDescriptor(spec, stringRec, outputArity);
 
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, splitOp,
                 new String[] { AlgebricksHyracksIntegrationUtil.NC1_ID });

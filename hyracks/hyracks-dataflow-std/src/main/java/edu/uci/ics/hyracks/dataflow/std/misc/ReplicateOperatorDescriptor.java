@@ -16,8 +16,6 @@ package edu.uci.ics.hyracks.dataflow.std.misc;
 
 import java.nio.ByteBuffer;
 
-import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspector;
-import edu.uci.ics.hyracks.algebricks.data.IBinaryIntegerInspectorFactory;
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
@@ -29,17 +27,13 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
-import edu.uci.ics.hyracks.data.std.util.GrowableArray;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
-import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import edu.uci.ics.hyracks.dataflow.common.comm.util.FrameUtils;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractActivityNode;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractOperatorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryInputOperatorNodePushable;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
 
-public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
+public class ReplicateOperatorDescriptor extends AbstractOperatorDescriptor {
     private static final long serialVersionUID = 1L;
 
     private final static int SPLITTER_MATERIALIZER_ACTIVITY_ID = 0;
@@ -49,17 +43,13 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
     private boolean requiresMaterialization;
     private int numberOfNonMaterializedOutputs = 0;
     private int numberOfActiveMaterializeReaders = 0;
-    private IBinaryIntegerInspectorFactory intInsepctorFactory;
-    private int conditionalVarFieldPos = 0;
 
-    public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity,
-            IBinaryIntegerInspectorFactory intInsepctorFactory, int conditionalVarFieldPos) {
-        this(spec, rDesc, outputArity, new boolean[outputArity], intInsepctorFactory, conditionalVarFieldPos);
+    public ReplicateOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity) {
+        this(spec, rDesc, outputArity, new boolean[outputArity]);
     }
 
-    public SplitOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity,
-            boolean[] outputMaterializationFlags, IBinaryIntegerInspectorFactory intInsepctorFactory,
-            int conditionalVarFieldPos) {
+    public ReplicateOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc, int outputArity,
+            boolean[] outputMaterializationFlags) {
         super(spec, 1, outputArity);
         for (int i = 0; i < outputArity; i++) {
             recordDescriptors[i] = rDesc;
@@ -72,8 +62,7 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                 break;
             }
         }
-        this.conditionalVarFieldPos = conditionalVarFieldPos;
-        this.intInsepctorFactory = intInsepctorFactory;
+
     }
 
     @Override
@@ -120,29 +109,15 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
             return new AbstractUnaryInputOperatorNodePushable() {
                 private MaterializerTaskState state;
                 private final IFrameWriter[] writers = new IFrameWriter[numberOfNonMaterializedOutputs];
-                private FrameTupleAccessor accessor;
-                private ArrayTupleBuilder[] builders;
-                private GrowableArray[] builderDatas;
-                private FrameTupleAppender[] appenders;
-                IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);
 
                 @Override
                 public void open() throws HyracksDataException {
-
                     if (requiresMaterialization) {
                         state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(
                                 getActivityId(), partition));
                         state.open(ctx);
                     }
-                    accessor = new FrameTupleAccessor(recordDescriptors[0]);
-                    builders = new ArrayTupleBuilder[numberOfNonMaterializedOutputs];
-                    builderDatas = new GrowableArray[numberOfNonMaterializedOutputs];
-                    appenders = new FrameTupleAppender[numberOfNonMaterializedOutputs];
-
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
-                        builders[i] = new ArrayTupleBuilder(recordDescriptors[0].getFieldCount());
-                        builderDatas[i] = builders[i].getFieldData();
-                        appenders[i] = new FrameTupleAppender(new VSizeFrame(ctx), true);
                         writers[i].open();
                     }
                 }
@@ -152,19 +127,8 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                     if (requiresMaterialization) {
                         state.appendFrame(bufferAccessor);
                     }
-
-                    accessor.reset(bufferAccessor);
-                    int tupleCount = accessor.getTupleCount();
-                    int resultValue = 0;
-
-                    for (int i = 0; i < tupleCount; i++) {
-                        resultValue = intInsepctor.getIntegerValue(
-                                accessor.getBuffer().array(),
-                                accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
-                                        + accessor.getFieldStartOffset(i, conditionalVarFieldPos),
-                                accessor.getFieldLength(i, conditionalVarFieldPos));
-
-                        FrameUtils.appendToWriter(writers[resultValue], appenders[resultValue], accessor, i);
+                    for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
+                        FrameUtils.flushFrame(bufferAccessor, writers[i]);
                     }
                 }
 
@@ -175,7 +139,6 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                         ctx.setStateObject(state);
                     }
                     for (int i = 0; i < numberOfNonMaterializedOutputs; i++) {
-                        appenders[i].flush(writers[i], true);
                         writers[i].close();
                     }
                 }
