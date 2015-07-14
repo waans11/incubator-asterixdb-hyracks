@@ -50,4 +50,8 @@ public interface ILSMIndexOperationContext extends IIndexOperationContext {
 
     public RecordDescriptor getRecordDescForProceedReturnResult();
 
+    public void setValuesForProceedReturnResult(byte[] valuesForProceedReturnResult);
+
+    public byte[] getValuesForProceedReturnResult();
+
 }

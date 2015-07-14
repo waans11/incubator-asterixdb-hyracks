@@ -80,8 +80,9 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
 
     @Override
     public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
-            RecordDescriptor rDesc) {
-        return new LSMInvertedIndexSearchCursor(useOperationCallbackProceedReturnResult, rDesc);
+            RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+        return new LSMInvertedIndexSearchCursor(useOperationCallbackProceedReturnResult, rDesc,
+                valuesForOperationCallbackProceedReturnResult);
     }
 
     @Override

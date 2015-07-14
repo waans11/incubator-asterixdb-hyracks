@@ -28,7 +28,6 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeFrame;
 import edu.uci.ics.hyracks.storage.am.btree.api.IBTreeInteriorFrame;
@@ -904,13 +903,12 @@ public class BTree extends AbstractTreeIndex {
             return new BTreeRangeSearchCursor(leafFrame, exclusive);
         }
 
-		@Override
-		public IIndexCursor createSearchCursor(boolean exclusive,
-				boolean useOperationCallbackProceedReturnResult,
-				RecordDescriptor rDesc) {
-			// This method is only required for the LSM based indexes
-			return null;
-		}
+        @Override
+        public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+                RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+            // This method is only required for the LSM based indexes
+            return null;
+        }
 
         @Override
         public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
@@ -942,7 +940,6 @@ public class BTree extends AbstractTreeIndex {
             IBTreeLeafFrame leafFrame = (IBTreeLeafFrame) btree.getLeafFrameFactory().createFrame();
             return new BTreeCountingSearchCursor(leafFrame, false);
         }
-
 
     }
 
@@ -1116,7 +1113,8 @@ public class BTree extends AbstractTreeIndex {
             tuple.resetByTupleIndex(interiorFrame, i);
             // Print child pointer.
             int numFields = tuple.getFieldCount();
-            int childPageId = IntegerPointable.getInteger(tuple.getFieldData(numFields - 1), tuple.getFieldStart(numFields - 1) + tuple.getFieldLength(numFields - 1));
+            int childPageId = IntegerPointable.getInteger(tuple.getFieldData(numFields - 1),
+                    tuple.getFieldStart(numFields - 1) + tuple.getFieldLength(numFields - 1));
             strBuilder.append("(" + childPageId + ") ");
             String tupleString = TupleUtils.printTuple(tuple, fieldSerdes);
             strBuilder.append(tupleString + " | ");

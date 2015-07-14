@@ -37,8 +37,8 @@ public class TreeIndexDiskOrderScanOperatorDescriptor extends AbstractTreeIndexO
             IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
             IIndexDataflowHelperFactory dataflowHelperFactory, ISearchOperationCallbackFactory searchOpCallbackProvider) {
         super(spec, 0, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits, null, null,
-                dataflowHelperFactory, null, false, false,
-                null, NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider, NoOpOperationCallbackFactory.INSTANCE, false);
+                dataflowHelperFactory, null, false, false, null, NoOpLocalResourceFactoryProvider.INSTANCE,
+                searchOpCallbackProvider, NoOpOperationCallbackFactory.INSTANCE);
     }
 
     @Override

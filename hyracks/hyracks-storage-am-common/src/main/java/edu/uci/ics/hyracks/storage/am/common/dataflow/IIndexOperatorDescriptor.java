@@ -52,4 +52,7 @@ public interface IIndexOperatorDescriptor extends IActivity {
     public ILocalResourceFactoryProvider getLocalResourceFactoryProvider();
 
     public boolean getUseOpercationCallbackProceedReturnResult();
+
+    public byte[] getValuesForOpercationCallbackProceedReturnResult();
+
 }

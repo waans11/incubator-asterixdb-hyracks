@@ -331,13 +331,12 @@ public class LSMRTreeWithAntiMatterTuples extends AbstractLSMRTree {
             return new LSMRTreeWithAntiMatterTuplesSearchCursor(ctx);
         }
 
-		@Override
-		public ITreeIndexCursor createSearchCursor(boolean exclusive,
-				boolean useOperationCallbackProceedReturnResult,
-				RecordDescriptor rDesc) {
-			// This method is only required for the LSM based indexes
-			return null;
-		}
+        @Override
+        public ITreeIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+                RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+            // This method is only required for the LSM based indexes
+            return null;
+        }
 
         public MultiComparator getMultiComparator() {
             LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;

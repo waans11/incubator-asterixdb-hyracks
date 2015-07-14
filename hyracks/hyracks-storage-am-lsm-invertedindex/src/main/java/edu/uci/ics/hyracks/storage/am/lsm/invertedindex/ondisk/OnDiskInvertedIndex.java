@@ -30,7 +30,6 @@ import edu.uci.ics.hyracks.data.std.primitive.IntegerPointable;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
-import edu.uci.ics.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.btree.frames.BTreeLeafFrameType;
 import edu.uci.ics.hyracks.storage.am.btree.impls.BTree;
@@ -274,10 +273,14 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
     }
 
     public void resetInvertedListCursor(ITupleReference btreeTuple, IInvertedListCursor listCursor) {
-        int startPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartPageIdField), btreeTuple.getFieldStart(invListStartPageIdField));
-        int endPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListEndPageIdField), btreeTuple.getFieldStart(invListEndPageIdField));
-        int startOff = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartOffField), btreeTuple.getFieldStart(invListStartOffField));
-        int numElements = IntegerPointable.getInteger(btreeTuple.getFieldData(invListNumElementsField), btreeTuple.getFieldStart(invListNumElementsField));
+        int startPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartPageIdField),
+                btreeTuple.getFieldStart(invListStartPageIdField));
+        int endPageId = IntegerPointable.getInteger(btreeTuple.getFieldData(invListEndPageIdField),
+                btreeTuple.getFieldStart(invListEndPageIdField));
+        int startOff = IntegerPointable.getInteger(btreeTuple.getFieldData(invListStartOffField),
+                btreeTuple.getFieldStart(invListStartOffField));
+        int numElements = IntegerPointable.getInteger(btreeTuple.getFieldData(invListNumElementsField),
+                btreeTuple.getFieldStart(invListNumElementsField));
         listCursor.reset(startPageId, endPageId, startOff, numElements);
     }
 
@@ -486,13 +489,12 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length);
         }
 
-		@Override
-		public IIndexCursor createSearchCursor(boolean exclusive,
-				boolean useOperationCallbackProceedReturnResult,
-				RecordDescriptor rDesc) {
-			// This method is only required for the LSM based indexes
-			return null;
-		}
+        @Override
+        public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+                RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+            // This method is only required for the LSM based indexes
+            return null;
+        }
 
         @Override
         public void search(IIndexCursor cursor, ISearchPredicate searchPred) throws HyracksDataException,
@@ -572,11 +574,14 @@ public class OnDiskInvertedIndex implements IInvertedIndex {
             return ByteBuffer.allocate(FRAME_SIZE);
         }
 
-        @Override public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
+        @Override
+        public ByteBuffer allocateFrame(int bytes) throws HyracksDataException {
             return ByteBuffer.allocate(bytes);
         }
 
-        @Override public ByteBuffer reallocateFrame(ByteBuffer bytes, int newSizeInBytes, boolean copyOldData) throws HyracksDataException {
+        @Override
+        public ByteBuffer reallocateFrame(ByteBuffer bytes, int newSizeInBytes, boolean copyOldData)
+                throws HyracksDataException {
             throw new HyracksDataException("TODO");
         }
 

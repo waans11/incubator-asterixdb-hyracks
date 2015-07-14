@@ -59,6 +59,9 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
     public final MultiComparator filterCmp;
     public final PermutingTupleReference filterTuple;
     public ISearchPredicate searchPredicate;
+    public boolean useOperationCallbackProceedReturnResult;
+    public RecordDescriptor rDescForProceedReturnResult;
+    public byte[] valuesForOperationCallbackProceedReturnResult;
 
     public LSMRTreeOpContext(List<ILSMComponent> mutableComponents, IRTreeLeafFrame rtreeLeafFrame,
             IRTreeInteriorFrame rtreeInteriorFrame, ITreeIndexFrameFactory btreeLeafFrameFactory,
@@ -101,6 +104,10 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
             filterCmp = null;
             filterTuple = null;
         }
+
+        this.useOperationCallbackProceedReturnResult = false;
+        this.rDescForProceedReturnResult = null;
+        this.valuesForOperationCallbackProceedReturnResult = null;
     }
 
     public void setOperation(IndexOperation newOp) {
@@ -166,36 +173,38 @@ public final class LSMRTreeOpContext implements ILSMIndexOperationContext {
         return searchPredicate;
     }
 
-<<<<<<< HEAD
     @Override
     public List<ILSMComponent> getComponentsToBeReplicated() {
         return componentsToBeReplicated;
     }
-=======
-	@Override
-	public void setUseOperationCallbackProceedReturnResult(
-			boolean useOperationCallbackProceedReturnResult) {
-		// TODO Auto-generated method stub
 
-	}
+    @Override
+    public void setUseOperationCallbackProceedReturnResult(boolean useOperationCallbackProceedReturnResult) {
+        this.useOperationCallbackProceedReturnResult = useOperationCallbackProceedReturnResult;
+    }
 
-	@Override
-	public boolean getUseOperationCallbackProceedReturnResult() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public void setRecordDescForProceedReturnResult(RecordDescriptor rDescForProceedReturnResult) {
+        this.rDescForProceedReturnResult = rDescForProceedReturnResult;
+    }
 
-	@Override
-	public void setRecordDescForProceedReturnResult(
-			RecordDescriptor rDescForProceedReturnResult) {
-		// TODO Auto-generated method stub
+    @Override
+    public boolean getUseOperationCallbackProceedReturnResult() {
+        return useOperationCallbackProceedReturnResult;
+    }
 
-	}
+    @Override
+    public RecordDescriptor getRecordDescForProceedReturnResult() {
+        return rDescForProceedReturnResult;
+    }
 
-	@Override
-	public RecordDescriptor getRecordDescForProceedReturnResult() {
-		// TODO Auto-generated method stub
-		return null;
-	}
->>>>>>> B+tree index-only select plan completed.
+    @Override
+    public void setValuesForProceedReturnResult(byte[] valuesForProceedReturnResult) {
+        this.valuesForOperationCallbackProceedReturnResult = valuesForProceedReturnResult;
+    }
+
+    @Override
+    public byte[] getValuesForProceedReturnResult() {
+        return valuesForOperationCallbackProceedReturnResult;
+    }
 }

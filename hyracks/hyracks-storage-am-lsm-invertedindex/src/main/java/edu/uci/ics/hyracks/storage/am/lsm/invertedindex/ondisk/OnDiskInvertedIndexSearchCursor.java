@@ -40,13 +40,15 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
     private final PermutingTupleReference resultTuple;
     private boolean useOperationCallbackProceedReturnResult;
     private RecordDescriptor recordDescForProceedReturnResult;
+    private byte[] valuesForOperationCallbackProceedReturnResult;
 
     public OnDiskInvertedIndexSearchCursor(IInvertedIndexSearcher invIndexSearcher, int numInvListFields) {
-        this(invIndexSearcher, numInvListFields, false, null);
+        this(invIndexSearcher, numInvListFields, false, null, null);
     }
 
     public OnDiskInvertedIndexSearchCursor(IInvertedIndexSearcher invIndexSearcher, int numInvListFields,
-            boolean useOperationCallbackProceedReturnResult, RecordDescriptor recordDescForProceedReturnResult) {
+            boolean useOperationCallbackProceedReturnResult, RecordDescriptor recordDescForProceedReturnResult,
+            byte[] valuesForOperationCallbackProceedReturnResult) {
         this.invIndexSearcher = invIndexSearcher;
         this.fta = invIndexSearcher.createResultFrameTupleAccessor();
         this.frameTuple = (FixedSizeTupleReference) invIndexSearcher.createResultFrameTupleReference();
@@ -58,6 +60,7 @@ public class OnDiskInvertedIndexSearchCursor implements IIndexCursor {
         resultTuple = new PermutingTupleReference(fieldPermutation);
         this.useOperationCallbackProceedReturnResult = useOperationCallbackProceedReturnResult;
         this.recordDescForProceedReturnResult = recordDescForProceedReturnResult;
+        this.valuesForOperationCallbackProceedReturnResult = valuesForOperationCallbackProceedReturnResult;
     }
 
     @Override

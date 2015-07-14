@@ -647,13 +647,12 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             return new LSMBTreeWithBuddySearchCursor(ctx, buddyBTreeFields);
         }
 
-		@Override
-		public IIndexCursor createSearchCursor(boolean exclusive,
-				boolean useOperationCallbackProceedReturnResult,
-				RecordDescriptor rDesc) {
-			// This method is only required for the LSM based indexes
-			return null;
-		}
+        @Override
+        public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+                RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+            // This method is only required for the LSM based indexes
+            return null;
+        }
 
         public MultiComparator getBTreeMultiComparator() {
             ExternalBTreeWithBuddyOpContext concreteCtx = (ExternalBTreeWithBuddyOpContext) ctx;
@@ -664,7 +663,6 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
             ExternalBTreeWithBuddyOpContext concreteCtx = (ExternalBTreeWithBuddyOpContext) ctx;
             return concreteCtx.getBuddyBTreeMultiComparator();
         }
-
 
     }
 

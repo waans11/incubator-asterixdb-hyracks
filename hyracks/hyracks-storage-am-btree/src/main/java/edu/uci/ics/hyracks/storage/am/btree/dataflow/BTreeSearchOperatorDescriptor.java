@@ -42,6 +42,8 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     protected final boolean highKeyInclusive;
     private final int[] minFilterFieldIndexes;
     private final int[] maxFilterFieldIndexes;
+    protected boolean useOpercationCallbackProceedReturnResult;
+    protected byte[] valuesForUseOperationCallbackProceedReturnResult;
 
     public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
@@ -50,17 +52,34 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
             INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider,
-            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean isIndexOnlyPlanEnabled) {
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
+        this(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
+                comparatorFactories, bloomFilterKeyFields, lowKeyFields, highKeyFields, lowKeyInclusive,
+                highKeyInclusive, dataflowHelperFactory, retainInput, retainNull, nullWriterFactory,
+                searchOpCallbackProvider, minFilterFieldIndexes, maxFilterFieldIndexes, false, null);
+    }
+
+    public BTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
+            IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
+            IFileSplitProvider fileSplitProvider, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] comparatorFactories, int[] bloomFilterKeyFields, int[] lowKeyFields,
+            int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
+            IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
+            INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackProvider,
+            int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean useOpercationCallbackProceedReturnResult,
+            byte[] valuesForUseOperationCallbackProceedReturnResult) {
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, bloomFilterKeyFields, dataflowHelperFactory, null, retainInput, retainNull,
                 nullWriterFactory, NoOpLocalResourceFactoryProvider.INSTANCE, searchOpCallbackProvider,
-                NoOpOperationCallbackFactory.INSTANCE, isIndexOnlyPlanEnabled);
+                NoOpOperationCallbackFactory.INSTANCE);
         this.lowKeyFields = lowKeyFields;
         this.highKeyFields = highKeyFields;
         this.lowKeyInclusive = lowKeyInclusive;
         this.highKeyInclusive = highKeyInclusive;
         this.minFilterFieldIndexes = minFilterFieldIndexes;
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
+        this.useOpercationCallbackProceedReturnResult = useOpercationCallbackProceedReturnResult;
+        this.valuesForUseOperationCallbackProceedReturnResult = valuesForUseOperationCallbackProceedReturnResult;
     }
 
     @Override
@@ -69,4 +88,15 @@ public class BTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
         return new BTreeSearchOperatorNodePushable(this, ctx, partition, recordDescProvider, lowKeyFields,
                 highKeyFields, lowKeyInclusive, highKeyInclusive, minFilterFieldIndexes, maxFilterFieldIndexes);
     }
+
+    @Override
+    public boolean getUseOpercationCallbackProceedReturnResult() {
+        return useOpercationCallbackProceedReturnResult;
+    }
+
+    @Override
+    public byte[] getValuesForOpercationCallbackProceedReturnResult() {
+        return valuesForUseOperationCallbackProceedReturnResult;
+    }
+
 }

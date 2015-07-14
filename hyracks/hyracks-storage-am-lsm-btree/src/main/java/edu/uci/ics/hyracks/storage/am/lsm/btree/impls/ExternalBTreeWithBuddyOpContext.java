@@ -144,4 +144,16 @@ public class ExternalBTreeWithBuddyOpContext implements ILSMIndexOperationContex
         // TODO Auto-generated method stub
         return null;
     }
+
+    @Override
+    public void setValuesForProceedReturnResult(byte[] valuesForProceedReturnResult) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public byte[] getValuesForProceedReturnResult() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

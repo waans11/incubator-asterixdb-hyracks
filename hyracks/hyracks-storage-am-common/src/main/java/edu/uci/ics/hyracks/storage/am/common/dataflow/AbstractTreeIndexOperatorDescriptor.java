@@ -36,7 +36,6 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
     protected final IBinaryComparatorFactory[] comparatorFactories;
     protected final int[] bloomFilterKeyFields;
 
-
     public AbstractTreeIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
             IIndexLifecycleManagerProvider lifecycleManagerProvider, IFileSplitProvider fileSplitProvider,
@@ -45,10 +44,10 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
             boolean retainInput, boolean retainNull, INullWriterFactory nullWriterFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory, boolean isIndexOnlyPlanEnabled) {
+            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
                 dataflowHelperFactory, tupleFilterFactory, retainInput, retainNull, nullWriterFactory,
-                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory, isIndexOnlyPlanEnabled);
+                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory);
         this.typeTraits = typeTraits;
         this.comparatorFactories = comparatorFactories;
         this.bloomFilterKeyFields = bloomFilterKeyFields;
@@ -75,5 +74,4 @@ public abstract class AbstractTreeIndexOperatorDescriptor extends AbstractIndexO
     public ITupleFilterFactory getTupleFilterFactory() {
         return tupleFilterFactory;
     }
-
 }

@@ -76,13 +76,11 @@ public interface IIndexAccessor {
      *             If the BufferCache throws while un/pinning or un/latching.
      * @throws IndexException
      *             If there is no matching tuple in the index.
-     *
      */
     public void upsert(ITupleReference tuple) throws HyracksDataException, IndexException;
 
     /**
      * Creates a cursor appropriate for passing into search().
-     *
      */
     public IIndexCursor createSearchCursor(boolean exclusive);
 
@@ -90,9 +88,9 @@ public interface IIndexAccessor {
      * Creates a cursor appropriate for passing into search().
      * In this case, cursor will add one more field to an output of an index.
      * The field will contain the result of OperationCallback.proceed().
-     *
      */
-    public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult, RecordDescriptor rDesc);
+    public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+            RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult);
 
     /**
      * Open the given cursor for an index search using the given predicate as

@@ -72,9 +72,9 @@ public class InMemoryInvertedIndexAccessor implements IInvertedIndexAccessor {
 
     @Override
     public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
-            RecordDescriptor rDesc) {
+            RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
         return new OnDiskInvertedIndexSearchCursor(searcher, index.getInvListTypeTraits().length,
-                useOperationCallbackProceedReturnResult, rDesc);
+                useOperationCallbackProceedReturnResult, rDesc, valuesForOperationCallbackProceedReturnResult);
     }
 
     @Override

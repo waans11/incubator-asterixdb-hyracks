@@ -43,7 +43,6 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
     protected final ISearchOperationCallbackFactory searchOpCallbackFactory;
     protected final IModificationOperationCallbackFactory modificationOpCallbackFactory;
     protected final ILocalResourceFactoryProvider localResourceFactoryProvider;
-    protected boolean isIndexOnlyPlanEnabled;
 
     public AbstractIndexOperatorDescriptor(IOperatorDescriptorRegistry spec, int inputArity, int outputArity,
             RecordDescriptor recDesc, IStorageManagerInterface storageManager,
@@ -52,7 +51,7 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
             boolean retainInput, boolean retainNull, INullWriterFactory nullWriterFactory,
             ILocalResourceFactoryProvider localResourceFactoryProvider,
             ISearchOperationCallbackFactory searchOpCallbackFactory,
-            IModificationOperationCallbackFactory modificationOpCallbackFactory, boolean isIndexOnlyPlanEnabled) {
+            IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity);
         this.fileSplitProvider = fileSplitProvider;
         this.storageManager = storageManager;
@@ -68,7 +67,6 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
         if (outputArity > 0) {
             recordDescriptors[0] = recDesc;
         }
-        this.isIndexOnlyPlanEnabled = isIndexOnlyPlanEnabled;
     }
 
     @Override
@@ -133,7 +131,11 @@ public abstract class AbstractIndexOperatorDescriptor extends AbstractSingleActi
 
     @Override
     public boolean getUseOpercationCallbackProceedReturnResult() {
-        return isIndexOnlyPlanEnabled;
+        return false;
     }
 
+    @Override
+    public byte[] getValuesForOpercationCallbackProceedReturnResult() {
+        return null;
+    }
 }
