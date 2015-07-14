@@ -3,9 +3,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * you may obtain a copy of the License from
- * 
+ *
  *     http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,12 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.rtree.impls;
 
+import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
+import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.data.accessors.ITupleReference;
+import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
 import edu.uci.ics.hyracks.storage.am.common.api.ICursorInitialState;
 import edu.uci.ics.hyracks.storage.am.common.api.ISearchPredicate;
 import edu.uci.ics.hyracks.storage.am.common.api.IndexException;
@@ -27,11 +31,21 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
 
     private int currentCursor;
     private PermutingTupleReference btreeTuple;
+    private boolean useProceedResult = false;
+    private RecordDescriptor rDescForProceedReturnResult = null;
+    private byte[] valuesForOperationCallbackProceedReturnResult;
+    private boolean resultOfsearchCallBackProceed = false;
+    private ArrayTupleBuilder tupleBuilderForProceedResult;
+    //    private byte[] returnValuesArrayForProccedResult = new byte[10];
+    private ArrayTupleReference copyTuple = null;
 
     public LSMRTreeSearchCursor(ILSMIndexOperationContext opCtx, int[] buddyBTreeFields) {
         super(opCtx);
         currentCursor = 0;
         this.btreeTuple = new PermutingTupleReference(buddyBTreeFields);
+        this.useProceedResult = opCtx.getUseOperationCallbackProceedReturnResult();
+        this.rDescForProceedReturnResult = opCtx.getRecordDescForProceedReturnResult();
+        this.valuesForOperationCallbackProceedReturnResult = opCtx.getValuesForProceedReturnResult();
     }
 
     @Override
@@ -80,6 +94,10 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
             while (rtreeCursors[currentCursor].hasNext()) {
                 rtreeCursors[currentCursor].next();
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
+                // TODO: at this point, we only add proceed() and cancel() part.
+                // reconcile() and complete() can be added later after considering the semantics.
+                // Call proceed() to do necessary operations before returning this tuple.
+                resultOfsearchCallBackProceed = searchCallback.proceed(currentTuple);
                 btreeTuple.reset(rtreeCursors[currentCursor].getTuple());
                 boolean killerTupleFound = false;
                 for (int i = 0; i < currentCursor; i++) {
@@ -100,6 +118,9 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                     frameTuple = currentTuple;
                     foundNext = true;
                     return true;
+                } else {
+                    // need to reverse the effect of proceed() since we can't return this tuple.
+                    searchCallback.cancel(currentTuple);
                 }
             }
             rtreeCursors[currentCursor].close();
@@ -112,12 +133,62 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
     @Override
     public void next() throws HyracksDataException {
         foundNext = false;
+
+        //  If useProceed is set to true (e.g., in case of an index-only plan)
+        //  and searchCallback.proceed() fail: will add AINT32 (zero)
+        //                            succeed: will add AINT32 (one)
+        if (useProceedResult) {
+            tupleBuilderForProceedResult.reset();
+            TupleUtils.copyTuple(tupleBuilderForProceedResult, frameTuple,
+                    rDescForProceedReturnResult.getFieldCount() - 1);
+
+            if (!resultOfsearchCallBackProceed) {
+                // fail - add AINT32(0)
+                tupleBuilderForProceedResult.addField(valuesForOperationCallbackProceedReturnResult, 0, 5);
+            } else {
+                // succeed - add AINT32(1)
+                tupleBuilderForProceedResult.addField(valuesForOperationCallbackProceedReturnResult, 5, 5);
+            }
+            copyTuple.reset(tupleBuilderForProceedResult.getFieldEndOffsets(),
+                    tupleBuilderForProceedResult.getByteArray());
+            frameTuple = copyTuple;
+        }
+
     }
 
     @Override
     public void open(ICursorInitialState initialState, ISearchPredicate searchPred) throws HyracksDataException {
         super.open(initialState, searchPred);
         searchNextCursor();
+
+        // If it is required to use the result of searchCallback.proceed(),
+        // we need to initialize the byte array that contains true and false result.
+        //
+        if (useProceedResult) {
+            //            returnValuesArrayForProccedResult =
+            //            byte[] tmpResultArray = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+            //            rDescForProceedReturnResult = opCtx.getRecordDescForProceedReturnResult();
+            //            ISerializerDeserializer<Object> serializerDeserializerForProceedReturnResult = rDescForProceedReturnResult
+            //                    .getFields()[rDescForProceedReturnResult.getFieldCount() - 1];
+            //            // INT is 4 byte, however since there is a tag before the actual value,
+            //            // we need to provide 5 byte. The serializer is already chosen so the typetag can be anything.
+            //            ByteArrayInputStream inStreamZero = new ByteArrayInputStream(tmpResultArray, 0, 5);
+            //            ByteArrayInputStream inStreamOne = new ByteArrayInputStream(tmpResultArray, 5, 5);
+            //            Object AInt32Zero = serializerDeserializerForProceedReturnResult.deserialize(new DataInputStream(
+            //                    inStreamZero));
+            //            Object AInt32One = serializerDeserializerForProceedReturnResult
+            //                    .deserialize(new DataInputStream(inStreamOne));
+            //            ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
+            //            serializerDeserializerForProceedReturnResult.serialize(AInt32Zero, castBuffer.getDataOutput());
+            //            System.arraycopy(castBuffer.getByteArray(), 0, returnValuesArrayForProccedResult, 0, castBuffer.getLength());
+            //            castBuffer.reset();
+            //            serializerDeserializerForProceedReturnResult.serialize(AInt32One, castBuffer.getDataOutput());
+            //            System.arraycopy(castBuffer.getByteArray(), 0, returnValuesArrayForProccedResult, 5, castBuffer.getLength());
+
+            tupleBuilderForProceedResult = new ArrayTupleBuilder(rDescForProceedReturnResult.getFieldCount());
+            copyTuple = new ArrayTupleReference();
+
+        }
     }
 
 }

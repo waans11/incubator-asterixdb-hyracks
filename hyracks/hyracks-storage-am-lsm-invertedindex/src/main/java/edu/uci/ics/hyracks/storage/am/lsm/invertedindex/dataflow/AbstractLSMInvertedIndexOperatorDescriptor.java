@@ -55,7 +55,7 @@ public abstract class AbstractLSMInvertedIndexOperatorDescriptor extends Abstrac
             IModificationOperationCallbackFactory modificationOpCallbackFactory) {
         super(spec, inputArity, outputArity, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider,
                 dataflowHelperFactory, tupleFilterFactory, retainInput, retainNull, nullWriterFactory,
-                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory, false);
+                localResourceFactoryProvider, searchOpCallbackFactory, modificationOpCallbackFactory);
         this.invListsTypeTraits = invListsTypeTraits;
         this.invListComparatorFactories = invListComparatorFactories;
         this.tokenTypeTraits = tokenTypeTraits;

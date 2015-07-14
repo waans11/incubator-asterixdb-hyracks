@@ -434,13 +434,16 @@ public class LSMRTree extends AbstractLSMRTree {
             return new LSMRTreeSearchCursor(ctx, buddyBTreeFields);
         }
 
-		@Override
-		public IIndexCursor createSearchCursor(boolean exclusive,
-				boolean useOperationCallbackProceedReturnResult,
-				RecordDescriptor rDesc) {
-			// This method is only required for the LSM based indexes
-			return null;
-		}
+        @Override
+        public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+                RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+            // This method is only required for the LSM based indexes
+            LSMRTreeOpContext concreteCtx = (LSMRTreeOpContext) ctx;
+            concreteCtx.setUseOperationCallbackProceedReturnResult(useOperationCallbackProceedReturnResult);
+            concreteCtx.setRecordDescForProceedReturnResult(rDesc);
+            concreteCtx.setValuesForProceedReturnResult(valuesForOperationCallbackProceedReturnResult);
+            return new LSMRTreeSearchCursor(concreteCtx, buddyBTreeFields);
+        }
 
         @Override
         public void delete(ITupleReference tuple) throws HyracksDataException, IndexException {

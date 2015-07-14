@@ -133,30 +133,40 @@ public class ExternalBTreeOpContext implements ILSMIndexOperationContext {
         return componentsToBeReplicated;
     }
 
-	@Override
-	public void setUseOperationCallbackProceedReturnResult(
-			boolean useOperationCallbackProceedReturnResult) {
-		// TODO Auto-generated method stub
+    @Override
+    public void setUseOperationCallbackProceedReturnResult(boolean useOperationCallbackProceedReturnResult) {
+        // TODO Auto-generated method stub
 
-	}
+    }
 
-	@Override
-	public boolean getUseOperationCallbackProceedReturnResult() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public boolean getUseOperationCallbackProceedReturnResult() {
+        // TODO Auto-generated method stub
+        return false;
+    }
 
-	@Override
-	public void setRecordDescForProceedReturnResult(
-			RecordDescriptor rDescForProceedReturnResult) {
-		// TODO Auto-generated method stub
+    @Override
+    public void setRecordDescForProceedReturnResult(RecordDescriptor rDescForProceedReturnResult) {
+        // TODO Auto-generated method stub
 
-	}
+    }
 
-	@Override
-	public RecordDescriptor getRecordDescForProceedReturnResult() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public RecordDescriptor getRecordDescForProceedReturnResult() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setValuesForProceedReturnResult(byte[] valuesForProceedReturnResult) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public byte[] getValuesForProceedReturnResult() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 }

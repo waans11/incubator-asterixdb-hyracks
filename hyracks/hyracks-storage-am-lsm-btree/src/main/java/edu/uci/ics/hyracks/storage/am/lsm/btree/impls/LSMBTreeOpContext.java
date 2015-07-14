@@ -59,6 +59,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
     public ISearchPredicate searchPredicate;
     public boolean useOperationCallbackProceedReturnResult;
     public RecordDescriptor rDescForProceedReturnResult;
+    public byte[] valuesForOperationCallbackProceedReturnResult;
 
     public LSMBTreeOpContext(List<ILSMComponent> mutableComponents, ITreeIndexFrameFactory insertLeafFrameFactory,
             ITreeIndexFrameFactory deleteLeafFrameFactory, IModificationOperationCallback modificationCallback,
@@ -112,6 +113,7 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
 
         this.useOperationCallbackProceedReturnResult = false;
         this.rDescForProceedReturnResult = null;
+        this.valuesForOperationCallbackProceedReturnResult = null;
     }
 
     @Override
@@ -206,16 +208,29 @@ public final class LSMBTreeOpContext implements ILSMIndexOperationContext {
         this.useOperationCallbackProceedReturnResult = useOperationCallbackProceedReturnResult;
     }
 
+    @Override
     public void setRecordDescForProceedReturnResult(RecordDescriptor rDescForProceedReturnResult) {
         this.rDescForProceedReturnResult = rDescForProceedReturnResult;
     }
 
+    @Override
     public boolean getUseOperationCallbackProceedReturnResult() {
         return useOperationCallbackProceedReturnResult;
     }
 
+    @Override
     public RecordDescriptor getRecordDescForProceedReturnResult() {
         return rDescForProceedReturnResult;
+    }
+
+    @Override
+    public void setValuesForProceedReturnResult(byte[] valuesForProceedReturnResult) {
+        this.valuesForOperationCallbackProceedReturnResult = valuesForProceedReturnResult;
+    }
+
+    @Override
+    public byte[] getValuesForProceedReturnResult() {
+        return valuesForOperationCallbackProceedReturnResult;
     }
 
 }

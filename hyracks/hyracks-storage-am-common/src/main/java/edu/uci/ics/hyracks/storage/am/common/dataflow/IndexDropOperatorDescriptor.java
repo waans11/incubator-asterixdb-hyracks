@@ -40,9 +40,9 @@ public class IndexDropOperatorDescriptor extends AbstractTreeIndexOperatorDescri
         // 2) The LSMRTreeDataflowHelper to get acceptable type traits
         // This should eventually not be *hacked*, but I don't know the proper fix yet. -zheilbron
         super(spec, 0, 0, null, storageManager, lifecycleManagerProvider, fileSplitProvider, new ITypeTraits[] {
-                IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS }, new IBinaryComparatorFactory[] { null }, null,
-                dataflowHelperFactory, null, false, false,
-                null, NoOpLocalResourceFactoryProvider.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE, false);
+                IntegerPointable.TYPE_TRAITS, IntegerPointable.TYPE_TRAITS }, new IBinaryComparatorFactory[] { null },
+                null, dataflowHelperFactory, null, false, false, null, NoOpLocalResourceFactoryProvider.INSTANCE,
+                NoOpOperationCallbackFactory.INSTANCE, NoOpOperationCallbackFactory.INSTANCE);
     }
 
     @Override

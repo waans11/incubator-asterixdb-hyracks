@@ -97,7 +97,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected IIndexCursor createCursor() {
         return indexAccessor.createSearchCursor(false, opDesc.getUseOpercationCallbackProceedReturnResult(),
-                opDesc.getRecordDescriptor());
+                opDesc.getRecordDescriptor(), opDesc.getValuesForOpercationCallbackProceedReturnResult());
     }
 
     protected abstract int getFieldCount();

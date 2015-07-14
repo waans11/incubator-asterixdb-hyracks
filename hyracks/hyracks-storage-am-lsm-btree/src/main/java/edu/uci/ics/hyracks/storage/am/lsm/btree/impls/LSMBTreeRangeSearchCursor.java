@@ -15,14 +15,10 @@
 
 package edu.uci.ics.hyracks.storage.am.lsm.btree.impls;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.util.Iterator;
 
-import edu.uci.ics.hyracks.api.dataflow.value.ISerializerDeserializer;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
-import edu.uci.ics.hyracks.data.std.util.ArrayBackedValueStorage;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import edu.uci.ics.hyracks.dataflow.common.util.TupleUtils;
@@ -68,6 +64,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         this.reusablePred = new RangePredicate(null, null, true, true, null, null);
         this.useProceedResult = opCtx.getUseOperationCallbackProceedReturnResult();
         this.rDescForProceedReturnResult = opCtx.getRecordDescForProceedReturnResult();
+        this.returnValuesArrayForProccedResult = opCtx.getValuesForProceedReturnResult();
     }
 
     @Override
@@ -275,26 +272,26 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         // we need to initialize the byte array that contains AInt32(0) and AInt32(1).
         //
         if (useProceedResult) {
-            byte[] tmpResultArray = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+            //            byte[] tmpResultArray = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
             rDescForProceedReturnResult = opCtx.getRecordDescForProceedReturnResult();
-            ISerializerDeserializer<Object> serializerDeserializerForProceedReturnResult = rDescForProceedReturnResult
-                    .getFields()[rDescForProceedReturnResult.getFieldCount() - 1];
-            // INT is 4 byte, however since there is a tag before the actual value,
-            // we need to provide 5 byte. The serializer is already chosen so the typetag can be anything.
-            ByteArrayInputStream inStreamZero = new ByteArrayInputStream(tmpResultArray, 0, 5);
-            ByteArrayInputStream inStreamOne = new ByteArrayInputStream(tmpResultArray, 5, 5);
-            Object AInt32Zero = serializerDeserializerForProceedReturnResult.deserialize(new DataInputStream(
-                    inStreamZero));
-            Object AInt32One = serializerDeserializerForProceedReturnResult
-                    .deserialize(new DataInputStream(inStreamOne));
-            ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
-            serializerDeserializerForProceedReturnResult.serialize(AInt32Zero, castBuffer.getDataOutput());
-            System.arraycopy(castBuffer.getByteArray(), 0, returnValuesArrayForProccedResult, 0, castBuffer.getLength());
-            castBuffer.reset();
-            serializerDeserializerForProceedReturnResult.serialize(AInt32One, castBuffer.getDataOutput());
-            System.arraycopy(castBuffer.getByteArray(), 0, returnValuesArrayForProccedResult, 5, castBuffer.getLength());
-
             tupleBuilderForProceedResult = new ArrayTupleBuilder(cmp.getKeyFieldCount() + 1);
+            returnValuesArrayForProccedResult = opCtx.getValuesForProceedReturnResult();
+            //            ISerializerDeserializer<Object> serializerDeserializerForProceedReturnResult = rDescForProceedReturnResult
+            //                    .getFields()[rDescForProceedReturnResult.getFieldCount() - 1];
+            //            // INT is 4 byte, however since there is a tag before the actual value,
+            //            // we need to provide 5 byte. The serializer is already chosen so the typetag can be anything.
+            //            ByteArrayInputStream inStreamZero = new ByteArrayInputStream(tmpResultArray, 0, 5);
+            //            ByteArrayInputStream inStreamOne = new ByteArrayInputStream(tmpResultArray, 5, 5);
+            //            Object AInt32Zero = serializerDeserializerForProceedReturnResult.deserialize(new DataInputStream(
+            //                    inStreamZero));
+            //            Object AInt32One = serializerDeserializerForProceedReturnResult
+            //                    .deserialize(new DataInputStream(inStreamOne));
+            //            ArrayBackedValueStorage castBuffer = new ArrayBackedValueStorage();
+            //            serializerDeserializerForProceedReturnResult.serialize(AInt32Zero, castBuffer.getDataOutput());
+            //            System.arraycopy(castBuffer.getByteArray(), 0, returnValuesArrayForProccedResult, 0, castBuffer.getLength());
+            //            castBuffer.reset();
+            //            serializerDeserializerForProceedReturnResult.serialize(AInt32One, castBuffer.getDataOutput());
+            //            System.arraycopy(castBuffer.getByteArray(), 0, returnValuesArrayForProccedResult, 5, castBuffer.getLength());
         }
 
     }

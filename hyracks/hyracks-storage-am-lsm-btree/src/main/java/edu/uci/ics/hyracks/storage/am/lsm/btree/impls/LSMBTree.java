@@ -760,16 +760,16 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             return new LSMBTreeSearchCursor(ctx);
         }
 
-		@Override
-		public IIndexCursor createSearchCursor(boolean exclusive,
-				boolean useOperationCallbackProceedReturnResult,
-				RecordDescriptor rDesc) {
-			// This method is only required for the LSM based indexes
-			LSMBTreeOpContext concreteCtx = (LSMBTreeOpContext) ctx;
-			concreteCtx.setUseOperationCallbackProceedReturnResult(useOperationCallbackProceedReturnResult);
-			concreteCtx.setRecordDescForProceedReturnResult(rDesc);
-			return new LSMBTreeSearchCursor(concreteCtx);
-		}
+        @Override
+        public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
+                RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
+            // This method is only required for the LSM based indexes
+            LSMBTreeOpContext concreteCtx = (LSMBTreeOpContext) ctx;
+            concreteCtx.setUseOperationCallbackProceedReturnResult(useOperationCallbackProceedReturnResult);
+            concreteCtx.setRecordDescForProceedReturnResult(rDesc);
+            concreteCtx.setValuesForProceedReturnResult(valuesForOperationCallbackProceedReturnResult);
+            return new LSMBTreeSearchCursor(concreteCtx);
+        }
 
         public MultiComparator getMultiComparator() {
             LSMBTreeOpContext concreteCtx = (LSMBTreeOpContext) ctx;
