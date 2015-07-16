@@ -104,11 +104,6 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
             }
         }
 
-        System.out.println("\nliveVars of " + op + " " + liveVars);
-        System.out.println("producedVars of " + op + " " + producedVars);
-        System.out.println("projectVars of " + op + " " + projectVars);
-        System.out.println("parentUsedVars of " + op + " " + parentsUsedVars);
-
         // Some of the variables that are live at this op are not used above.
         if (projectVars.size() != liveVars.size()) {
             // Add a project operator under each of op's qualifying input branches.
@@ -116,21 +111,20 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
                 ILogicalOperator childOp = op.getInputs().get(i).getValue();
                 liveVars.clear();
                 VariableUtilities.getLiveVariables(childOp, liveVars);
-                System.out.println("childLiveVars of " + op + " " + liveVars);
                 List<LogicalVariable> vars = new ArrayList<LogicalVariable>();
                 vars.addAll(projectVars);
                 // Only retain those variables that are live in the i-th input branch.
                 vars.retainAll(liveVars);
                 // Not push down Project below SPLIT or REPLICATE since it has two or more parents node
                 // and this rule checks only one path at a time.
-                boolean needToSkip = op.getOperatorTag() == LogicalOperatorTag.SPLIT || op.getOperatorTag() == LogicalOperatorTag.REPLICATE;
+                boolean needToSkip = op.getOperatorTag() == LogicalOperatorTag.SPLIT
+                        || op.getOperatorTag() == LogicalOperatorTag.REPLICATE;
                 if (vars.size() != liveVars.size() && !needToSkip) {
                     ProjectOperator projectOp = new ProjectOperator(vars);
                     projectOp.getInputs().add(new MutableObject<ILogicalOperator>(childOp));
                     op.getInputs().get(i).setValue(projectOp);
                     context.computeAndSetTypeEnvironmentForOperator(projectOp);
                     modified = true;
-                    System.out.println("new Project with " + vars + " added between " + op + " " + childOp);
                 }
             }
         } else if (op.getOperatorTag() == LogicalOperatorTag.PROJECT) {

@@ -145,13 +145,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected void writeSearchResults(int tupleIndex) throws Exception {
         boolean matched = false;
-        int count = 0;
         while (cursor.hasNext()) {
             matched = true;
             tb.reset();
             cursor.next();
-            count++;
-            System.out.println("cursor count:" + count);
             if (retainInput) {
                 frameTuple.reset(accessor, tupleIndex);
                 for (int i = 0; i < frameTuple.getFieldCount(); i++) {
