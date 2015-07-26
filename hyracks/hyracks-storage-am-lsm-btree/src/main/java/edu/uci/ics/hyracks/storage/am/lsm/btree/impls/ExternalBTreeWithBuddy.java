@@ -651,7 +651,7 @@ public class ExternalBTreeWithBuddy extends AbstractLSMIndex implements ITreeInd
         public IIndexCursor createSearchCursor(boolean exclusive, boolean useOperationCallbackProceedReturnResult,
                 RecordDescriptor rDesc, byte[] valuesForOperationCallbackProceedReturnResult) {
             // This method is only required for the LSM based indexes
-            return null;
+            return new LSMBTreeWithBuddySearchCursor(ctx, buddyBTreeFields);
         }
 
         public MultiComparator getBTreeMultiComparator() {

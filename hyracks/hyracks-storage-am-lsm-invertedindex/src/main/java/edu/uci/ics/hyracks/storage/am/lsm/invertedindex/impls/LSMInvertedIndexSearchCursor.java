@@ -200,7 +200,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
         if (useOperationCallbackProceedReturnResult) {
             tupleBuilderForProceedResult.reset();
             TupleUtils.copyTuple(tupleBuilderForProceedResult, currentCursor.getTuple(), currentCursor.getTuple()
-                    .getFieldCount() - 1);
+                    .getFieldCount());
 
             if (!resultOfSearchCallBackProceed) {
                 // fail - add AINT32(0)
