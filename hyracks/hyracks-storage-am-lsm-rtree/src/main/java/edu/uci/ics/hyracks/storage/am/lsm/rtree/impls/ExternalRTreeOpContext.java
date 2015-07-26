@@ -41,7 +41,6 @@ public class ExternalRTreeOpContext implements ILSMIndexOperationContext {
     public ExternalRTreeOpContext(IBinaryComparatorFactory[] rtreeCmpFactories,
             IBinaryComparatorFactory[] btreeCmpFactories, ISearchOperationCallback searchCallback,
             int targetIndexVersion) {
-
         this.componentHolder = new LinkedList<ILSMComponent>();
         this.componentsToBeMerged = new LinkedList<ILSMComponent>();
         this.componentsToBeReplicated = new LinkedList<ILSMComponent>();
@@ -124,7 +123,6 @@ public class ExternalRTreeOpContext implements ILSMIndexOperationContext {
     @Override
     public void setUseOperationCallbackProceedReturnResult(boolean useOperationCallbackProceedReturnResult) {
         // TODO Auto-generated method stub
-
     }
 
     @Override

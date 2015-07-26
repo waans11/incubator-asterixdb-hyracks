@@ -56,6 +56,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected IIndexAccessor indexAccessor;
 
     protected final RecordDescriptor inputRecDesc;
+    protected final RecordDescriptor outputRecDesc;
     protected final boolean retainInput;
     protected FrameTupleReference frameTuple;
 
@@ -79,6 +80,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             this.nullWriter = opDesc.getNullWriterFactory().createNullWriter();
         }
         this.inputRecDesc = recordDescProvider.getInputRecordDescriptor(opDesc.getActivityId(), 0);
+        this.outputRecDesc = recordDescProvider.getOutputRecordDescriptor(opDesc.getActivityId(), 0);
         this.minFilterFieldIndexes = minFilterFieldIndexes;
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
         if (minFilterFieldIndexes != null && minFilterFieldIndexes.length > 0) {
@@ -154,10 +156,23 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 for (int i = 0; i < frameTuple.getFieldCount(); i++) {
                     dos.write(frameTuple.getFieldData(i), frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
                     tb.addFieldEndOffset();
+                    //                    ByteArrayInputStream inStreamZero = new ByteArrayInputStream(frameTuple.getFieldData(i),
+                    //                            frameTuple.getFieldStart(i), frameTuple.getFieldLength(i));
+                    //                    Object test = inputRecDesc.getFields()[i].deserialize(new DataInputStream(inStreamZero));
+                    //                    System.out.println("input " + test + " " + opDesc.getActivityId());
                 }
+
             }
             ITupleReference tuple = cursor.getTuple();
             for (int i = 0; i < tuple.getFieldCount(); i++) {
+                //                ByteArrayInputStream inStreamZero = new ByteArrayInputStream(tuple.getFieldData(i),
+                //                        tuple.getFieldStart(i), tuple.getFieldLength(i));
+                //                int fieldNo = i;
+                //                if (retainInput) {
+                //                    fieldNo += frameTuple.getFieldCount();
+                //                }
+                //                Object test = outputRecDesc.getFields()[fieldNo].deserialize(new DataInputStream(inStreamZero));
+                //                System.out.println(test + " " + opDesc.getActivityId());
                 dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
                 tb.addFieldEndOffset();
             }
