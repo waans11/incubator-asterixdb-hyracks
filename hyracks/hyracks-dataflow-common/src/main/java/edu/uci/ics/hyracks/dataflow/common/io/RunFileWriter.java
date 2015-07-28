@@ -15,17 +15,12 @@
 package edu.uci.ics.hyracks.dataflow.common.io;
 
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
 
 import edu.uci.ics.hyracks.api.comm.IFrameWriter;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
 import edu.uci.ics.hyracks.api.io.IFileHandle;
 import edu.uci.ics.hyracks.api.io.IIOManager;
-import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.StopWatch;
 
 public class RunFileWriter implements IFrameWriter {
     private final FileReference file;
@@ -56,7 +51,7 @@ public class RunFileWriter implements IFrameWriter {
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-    	size += ioManager.syncWrite(handle, size, buffer);
+        size += ioManager.syncWrite(handle, size, buffer);
     }
 
     @Override
