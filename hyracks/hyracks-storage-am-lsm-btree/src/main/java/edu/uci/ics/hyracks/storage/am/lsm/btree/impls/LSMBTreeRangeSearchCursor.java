@@ -164,7 +164,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                                     if (!isNotExhaustedCursor || cmp.compare(copyTuple, mutableElement.getTuple()) != 0) {
                                         // case: the searched key is no longer exist. We call cancel() to
                                         // reverse the effect of reconcile() method.
-                                        searchCallback.cancel(copyTuple);
+                                        searchCallback.cancelReconcile(copyTuple);
                                         continue;
                                     }
                                     //case: the searched key is still there.
@@ -181,7 +181,6 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                             searchCallback.reconcile(checkElement.getTuple());
                         }
                     }
-
                 }
 
                 // If there is no previous tuple or the previous tuple can be ignored
@@ -192,7 +191,13 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
                         // We cannot push immediately because the tuple may be
                         // modified if hasNext() is called
                         outputElement = outputPriorityQueue.poll();
-                        searchCallback.cancel(checkElement.getTuple());
+                        // Revert the action of proceed()?
+                        if (resultOfsearchCallBackProceed) {
+                            searchCallback.cancelProceed(checkElement.getTuple());
+                        } else {
+                            // Revert the action of reconcile()?
+                            searchCallback.cancelReconcile(checkElement.getTuple());
+                        }
                         needPushElementIntoQueue = true;
                         canCallProceedMethod = false;
                     } else {

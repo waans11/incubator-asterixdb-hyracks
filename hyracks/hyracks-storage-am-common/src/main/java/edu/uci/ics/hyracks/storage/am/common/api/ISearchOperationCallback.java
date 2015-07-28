@@ -29,7 +29,8 @@ public interface ISearchOperationCallback {
     /**
      * During an index search operation, this method will be called on tuples as they are
      * passed by with a search cursor. This call will be invoked while a leaf page is latched
-     * and pinned. If the call returns false, then the page will be unlatched and unpinned and {@link #reconcile(ITupleReference)} will be called with the tuple that was not proceeded
+     * and pinned. If the call returns false, then the page will be unlatched and unpinned
+     * and {@link #reconcile(ITupleReference)} will be called with the tuple that was not proceeded
      * on.
      *
      * @param tuple
@@ -51,13 +52,23 @@ public interface ISearchOperationCallback {
 
     /**
      * This method is called on a tuple that was reconciled on, but not found after
-     * re-traversing. Or it can be called after proceed() to cancel any actions that were taken in proceed().
-     * This method allows an opportunity to cancel some action that was taken in {@link #proceed(ITupleReference))} or {@link #reconcile(ITupleReference))}.
+     * re-traversing. This method allows an opportunity to cancel some action that
+     * was taken in {@link #reconcile(ITupleReference))}.
      *
      * @param tuple
      *            the tuple that was previously reconciled or proceeded
      */
-    public void cancel(ITupleReference tuple) throws HyracksDataException;
+    public void cancelReconcile(ITupleReference tuple) throws HyracksDataException;
+
+    /**
+     * This method is called on a tuple that was proceeded on to cancel any actions
+     * that were taken in proceed(). This method allows an opportunity to cancel some
+     * action that was taken in {@link #proceed(ITupleReference))}.
+     *
+     * @param tuple
+     *            the tuple that was previously reconciled or proceeded
+     */
+    public void cancelProceed(ITupleReference tuple) throws HyracksDataException;
 
     /**
      * This method is only called on a tuple that was reconciled on, and found after

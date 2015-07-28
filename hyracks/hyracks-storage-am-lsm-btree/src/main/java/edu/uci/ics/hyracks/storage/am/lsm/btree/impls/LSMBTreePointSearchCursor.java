@@ -75,7 +75,13 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                 if (reconciled || searchCallback.proceed(predicate.getLowKey())) {
                     // if proceed is successful, then there's no need for doing the "unlatch dance"
                     if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
-                        searchCallback.cancel(predicate.getLowKey());
+                        if (reconciled) {
+                            // Cancel the action of the reconcile()
+                            searchCallback.cancelReconcile(predicate.getLowKey());
+                        } else {
+                            // Cancel the action of the proceed()
+                            searchCallback.cancelProceed(predicate.getLowKey());
+                        }
                         rangeCursors[i].close();
                         return false;
                     } else {
@@ -92,13 +98,14 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
 
                     // retraverse
                     btreeAccessors[0].search(rangeCursors[i], predicate);
-                    /** wrong usage ************
-                    searchCallback.complete(predicate.getLowKey());
-                    ***************************/
+                    /**
+                     * wrong usage ************
+                     * searchCallback.complete(predicate.getLowKey());
+                     ***************************/
                     if (rangeCursors[i].hasNext()) {
                         rangeCursors[i].next();
                         if (((ILSMTreeTupleReference) rangeCursors[i].getTuple()).isAntimatter()) {
-                            searchCallback.cancel(predicate.getLowKey());
+                            searchCallback.cancelReconcile(predicate.getLowKey());
                             rangeCursors[i].close();
                             return false;
                         } else {
@@ -108,7 +115,7 @@ public class LSMBTreePointSearchCursor implements ITreeIndexCursor {
                             return true;
                         }
                     } else {
-                    	searchCallback.cancel(predicate.getLowKey());
+                        searchCallback.cancelReconcile(predicate.getLowKey());
                         rangeCursors[i].close();
                     }
                 } else {

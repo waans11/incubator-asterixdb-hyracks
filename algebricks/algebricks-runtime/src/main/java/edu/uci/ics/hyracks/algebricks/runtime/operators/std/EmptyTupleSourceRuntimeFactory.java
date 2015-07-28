@@ -21,8 +21,8 @@ import edu.uci.ics.hyracks.api.comm.VSizeFrame;
 import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
+import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 

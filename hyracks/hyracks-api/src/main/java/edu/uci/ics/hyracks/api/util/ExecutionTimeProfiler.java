@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class ExecutionTimeProfiler {
 
-    public static final boolean PROFILE_MODE = true;
+    public static final boolean PROFILE_MODE = false;
     public static final String INIT = "init";
     private FileOutputStream fos;
     private String filePath;

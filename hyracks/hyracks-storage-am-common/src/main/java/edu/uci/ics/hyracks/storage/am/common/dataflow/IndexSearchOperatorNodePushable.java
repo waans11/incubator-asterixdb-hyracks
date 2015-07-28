@@ -25,8 +25,8 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
+import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -73,9 +73,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected PermutingFrameTupleReference maxFilterKey;
 
     // Added to measure the execution time when the profiler setting is enabled
-    private ExecutionTimeStopWatch profilerSW;
-    private String nodeJobSignature;
-    private String taskId;
+    protected ExecutionTimeStopWatch profilerSW;
+    protected String nodeJobSignature;
+    protected String taskId;
+    protected String indexType;
 
     public IndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IRecordDescriptorProvider recordDescProvider, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
@@ -133,7 +134,17 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             // Initialize the counter for this runtime instance
             OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler.add(nodeJobSignature, taskId,
                     ExecutionTimeProfiler.INIT, false);
-            System.out.println(searchPred.applicableIndexType() + "_SEARCH start " + nodeJobSignature + " " + taskId);
+            indexType = searchPred.applicableIndexType();
+
+            // Check whether we are dealing with the primary index or secondary index
+            if (indexType.equals("BTREE_INDEX")) {
+                if (!indexHelper.needKeyDuplicateCheck()) {
+                    indexType = "BTREE_PRIMARY_INDEX";
+                } else {
+                    indexType = "BTREE_SECONDARY_INDEX";
+                }
+            }
+            System.out.println(indexType + "_SEARCH start " + nodeJobSignature + " " + taskId);
         }
 
         accessor = new FrameTupleAccessor(inputRecDesc);
@@ -272,8 +283,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                         taskId,
                         profilerSW.getMessage(searchPred.applicableIndexType() + "_SEARCH\t" + ctx.getTaskAttemptId()
                                 + "\t" + this.toString(), profilerSW.getStartTimeStamp()), false);
-                System.out.println(searchPred.applicableIndexType() + "_SEARCH close() " + nodeJobSignature + " "
-                        + taskId);
+                System.out.println(indexType + "_SEARCH close() " + nodeJobSignature + " " + taskId);
             }
         } finally {
             indexHelper.close();

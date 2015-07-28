@@ -195,7 +195,7 @@ public class BTreeRangeSearchCursor implements ITreeIndexCursor {
                     searchCb.complete(reconciliationTuple);
                     return true;
                 } else {
-                    searchCb.cancel(reconciliationTuple);
+                    searchCb.cancelReconcile(reconciliationTuple);
                 }
             }
         }

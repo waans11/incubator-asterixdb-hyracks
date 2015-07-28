@@ -49,9 +49,9 @@ class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOpera
     private ExternalGroupState state;
 
     // For Experiment Profiler
-	private ExecutionTimeStopWatch profilerSW;
-	private String nodeJobSignature;
-	private String taskId;
+    private ExecutionTimeStopWatch profilerSW;
+    private String nodeJobSignature;
+    private String taskId;
 
     ExternalGroupBuildOperatorNodePushable(IHyracksTaskContext ctx, Object stateId, int[] keyFields, int framesLimit,
             IBinaryComparatorFactory[] comparatorFactories, INormalizedKeyComputerFactory firstNormalizerFactory,

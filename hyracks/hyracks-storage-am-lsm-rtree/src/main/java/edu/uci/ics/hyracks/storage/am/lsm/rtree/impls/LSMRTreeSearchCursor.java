@@ -94,8 +94,9 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
             while (rtreeCursors[currentCursor].hasNext()) {
                 rtreeCursors[currentCursor].next();
                 ITupleReference currentTuple = rtreeCursors[currentCursor].getTuple();
-                // TODO: at this point, we only add proceed() and cancel() part.
+                // TODO: at this point, we only add proceed() and cancelProceed() part.
                 // reconcile() and complete() can be added later after considering the semantics.
+
                 // Call proceed() to do necessary operations before returning this tuple.
                 resultOfsearchCallBackProceed = searchCallback.proceed(currentTuple);
                 btreeTuple.reset(rtreeCursors[currentCursor].getTuple());
@@ -120,7 +121,7 @@ public class LSMRTreeSearchCursor extends LSMRTreeAbstractCursor {
                     return true;
                 } else {
                     // need to reverse the effect of proceed() since we can't return this tuple.
-                    searchCallback.cancel(currentTuple);
+                    searchCallback.cancelProceed(currentTuple);
                 }
             }
             rtreeCursors[currentCursor].close();

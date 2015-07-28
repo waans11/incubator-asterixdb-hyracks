@@ -145,7 +145,7 @@ public class LSMInvertedIndexSearchCursor implements IIndexCursor {
                 tupleConsumed = false;
                 return true;
             } else {
-                searchCallback.cancel(currentTuple);
+                searchCallback.cancelProceed(currentTuple);
             }
         }
         return false;

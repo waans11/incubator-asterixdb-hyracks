@@ -97,9 +97,9 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             private boolean first = true;
 
             // Added to measure the execution time when the profiler setting is enabled
-            private ExecutionTimeStopWatch profilerSW;
-            private String nodeJobSignature;
-            private String taskId;
+            protected ExecutionTimeStopWatch profilerSW;
+            protected String nodeJobSignature;
+            protected String taskId;
 
             @Override
             public void open() throws HyracksDataException {
@@ -150,7 +150,12 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
                     for (; t < nTuple - 1; t++) {
                         tRef.reset(tAccess, t);
                         produceTuple(tupleBuilder, tAccess, t, tRef);
-                        appendToFrameFromTupleBuilder(tupleBuilder);
+                        // Added to measure the execution time when the profiler setting is enabled
+                        if (!ExecutionTimeProfiler.PROFILE_MODE) {
+                            appendToFrameFromTupleBuilder(tupleBuilder);
+                        } else {
+                            appendToFrameFromTupleBuilder(tupleBuilder, false, profilerSW);
+                        }
                     }
                 }
 
@@ -204,7 +209,7 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             @Override
             public void close() throws HyracksDataException {
                 if (!ExecutionTimeProfiler.PROFILE_MODE) {
-                    flushIfNotFailed();
+                    flushIfNotFailed(null);
                 } else {
                     flushIfNotFailed(profilerSW);
                 }
