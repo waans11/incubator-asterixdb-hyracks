@@ -20,9 +20,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class ExperimentProfiler {
+public class ExecutionTimeProfiler {
 
-    public static final boolean PROFILE_MODE = false;
+    public static final boolean PROFILE_MODE = true;
+    public static final String INIT = "init";
     private FileOutputStream fos;
     private String filePath;
     private StringBuilder sb;
@@ -35,7 +36,7 @@ public class ExperimentProfiler {
     // [Key: Job, Value: [Key: Operator, Value: Duration of each operators]]
     private HashMap<String, LinkedHashMap<String, String>> spentTimePerJobMap;
 
-    public ExperimentProfiler(String filePath, int printInterval) {
+    public ExecutionTimeProfiler(String filePath, int printInterval) {
         this.filePath = new String(filePath);
         this.sb = new StringBuilder();
         this.printInterval = printInterval;

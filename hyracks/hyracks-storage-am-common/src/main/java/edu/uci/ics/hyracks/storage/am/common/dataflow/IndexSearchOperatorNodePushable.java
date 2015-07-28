@@ -24,6 +24,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.INullWriter;
 import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
+import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
+import edu.uci.ics.hyracks.api.util.StopWatch;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -69,6 +72,11 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected PermutingFrameTupleReference minFilterKey;
     protected PermutingFrameTupleReference maxFilterKey;
 
+    // Added to measure the execution time when the profiler setting is enabled
+    private StopWatch profilerSW;
+    private String nodeJobSignature;
+    private String taskId;
+
     public IndexSearchOperatorNodePushable(IIndexOperatorDescriptor opDesc, IHyracksTaskContext ctx, int partition,
             IRecordDescriptorProvider recordDescProvider, int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
         this.opDesc = opDesc;
@@ -106,6 +114,24 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     @Override
     public void open() throws HyracksDataException {
+        // Added to measure the execution time when the profiler setting is enabled
+        if (ExecutionTimeProfiler.PROFILE_MODE) {
+            profilerSW = new StopWatch();
+            profilerSW.start();
+
+            // The key of this job: nodeId + JobId + Joblet hash code
+            nodeJobSignature = ctx.getJobletContext().getApplicationContext().getNodeId() + "_"
+                    + ctx.getJobletContext().getJobId() + "_" + ctx.getJobletContext().hashCode();
+
+            // taskId: partition + taskId + started time
+            taskId = ctx.getTaskAttemptId() + this.toString() + profilerSW.getStartTimeStamp();
+
+            // Initialize the counter for this runtime instance
+            OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler.add(nodeJobSignature, taskId,
+                    ExecutionTimeProfiler.INIT, false);
+            System.out.println("INDEX_SEARCH open() " + nodeJobSignature + " " + taskId);
+        }
+
         accessor = new FrameTupleAccessor(inputRecDesc);
         writer.open();
         indexHelper.open();

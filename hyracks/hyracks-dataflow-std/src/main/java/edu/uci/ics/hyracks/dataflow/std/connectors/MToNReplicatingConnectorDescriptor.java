@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
-import edu.uci.ics.hyracks.api.util.ExperimentProfiler;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.StopWatch;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
@@ -68,7 +68,7 @@ public class MToNReplicatingConnectorDescriptor extends
 			public void nextFrame(ByteBuffer buffer)
 					throws HyracksDataException {
 				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
+				if (ExecutionTimeProfiler.PROFILE_MODE) {
 					profilerSW.resume();
 				}
 				buffer.mark();
@@ -79,7 +79,7 @@ public class MToNReplicatingConnectorDescriptor extends
 					epWriters[i].nextFrame(buffer);
 				}
 				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
+				if (ExecutionTimeProfiler.PROFILE_MODE) {
 					profilerSW.suspend();
 				}
 			}
@@ -87,7 +87,7 @@ public class MToNReplicatingConnectorDescriptor extends
 			@Override
 			public void fail() throws HyracksDataException {
 				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
+				if (ExecutionTimeProfiler.PROFILE_MODE) {
 					profilerSW.finish();
 					OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler
 							.add(nodeJobSignature, taskIdWithTimeStamp,
@@ -108,7 +108,7 @@ public class MToNReplicatingConnectorDescriptor extends
 					epWriters[i].close();
 				}
 				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
+				if (ExecutionTimeProfiler.PROFILE_MODE) {
 					profilerSW.finish();
 					OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler
 							.add(nodeJobSignature, taskIdWithTimeStamp,
@@ -125,7 +125,7 @@ public class MToNReplicatingConnectorDescriptor extends
 			@Override
 			public void open() throws HyracksDataException {
 				// For Experiment Profiler
-				if (ExperimentProfiler.PROFILE_MODE) {
+				if (ExecutionTimeProfiler.PROFILE_MODE) {
 					profilerSW = new StopWatch();
 					profilerSW.start();
 					taskIdWithTimeStamp = taskId

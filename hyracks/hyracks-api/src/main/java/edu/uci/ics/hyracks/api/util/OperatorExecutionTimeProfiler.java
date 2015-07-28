@@ -19,12 +19,12 @@ import java.util.Calendar;
 
 public class OperatorExecutionTimeProfiler {
     public static final OperatorExecutionTimeProfiler INSTANCE = new OperatorExecutionTimeProfiler();
-    public ExperimentProfiler executionTimeProfiler;
+    public ExecutionTimeProfiler executionTimeProfiler;
 
     private OperatorExecutionTimeProfiler() {
-        if (ExperimentProfiler.PROFILE_MODE) {
+        if (ExecutionTimeProfiler.PROFILE_MODE) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS");
-            executionTimeProfiler = new ExperimentProfiler("executionTime"
+            executionTimeProfiler = new ExecutionTimeProfiler("executionTime"
                     + sdf.format(Calendar.getInstance().getTime()) + ".txt", 1);
             executionTimeProfiler.begin();
         }
