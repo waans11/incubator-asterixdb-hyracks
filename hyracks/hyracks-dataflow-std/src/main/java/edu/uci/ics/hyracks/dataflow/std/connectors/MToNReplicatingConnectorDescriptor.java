@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IConnectorDescriptorRegistry;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.StopWatch;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
 import edu.uci.ics.hyracks.dataflow.std.base.AbstractMToNConnectorDescriptor;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicChannelReader;
 import edu.uci.ics.hyracks.dataflow.std.collectors.NonDeterministicFrameReader;
@@ -61,7 +61,7 @@ public class MToNReplicatingConnectorDescriptor extends
 		return new IFrameWriter() {
 
 			// For Experiment Profiler
-			private StopWatch profilerSW;
+			private ExecutionTimeStopWatch profilerSW;
 			private String taskIdWithTimeStamp;
 
 			@Override
@@ -126,7 +126,7 @@ public class MToNReplicatingConnectorDescriptor extends
 			public void open() throws HyracksDataException {
 				// For Experiment Profiler
 				if (ExecutionTimeProfiler.PROFILE_MODE) {
-					profilerSW = new StopWatch();
+					profilerSW = new ExecutionTimeStopWatch();
 					profilerSW.start();
 					taskIdWithTimeStamp = taskId
 							+ profilerSW.getStartTimeStamp();

@@ -22,7 +22,7 @@ import edu.uci.ics.hyracks.api.context.IHyracksTaskContext;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.StopWatch;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 
@@ -46,7 +46,7 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
             private FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
 
             // Added to measure the execution time when the profiler setting is enabled
-            private StopWatch profilerSW;
+            private ExecutionTimeStopWatch profilerSW;
             private String nodeJobSignature;
             private String taskId;
 
@@ -55,7 +55,7 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
 
                 // Added to measure the execution time when the profiler setting is enabled
                 if (ExecutionTimeProfiler.PROFILE_MODE) {
-                    profilerSW = new StopWatch();
+                    profilerSW = new ExecutionTimeStopWatch();
                     profilerSW.start();
 
                     // The key of this job: nodeId + JobId + Joblet hash code

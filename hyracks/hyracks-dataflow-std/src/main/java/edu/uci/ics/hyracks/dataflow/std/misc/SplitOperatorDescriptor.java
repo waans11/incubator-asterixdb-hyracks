@@ -29,6 +29,9 @@ import edu.uci.ics.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.job.IOperatorDescriptorRegistry;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
+import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
 import edu.uci.ics.hyracks.data.std.util.GrowableArray;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
@@ -126,8 +129,30 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                 private FrameTupleAppender[] appenders;
                 IBinaryIntegerInspector intInsepctor = intInsepctorFactory.createBinaryIntegerInspector(ctx);
 
+                // Added to measure the execution time when the profiler setting is enabled
+                private ExecutionTimeStopWatch profilerSW;
+                private String nodeJobSignature;
+                private String taskId;
+
                 @Override
                 public void open() throws HyracksDataException {
+                    // Added to measure the execution time when the profiler setting is enabled
+                    if (ExecutionTimeProfiler.PROFILE_MODE) {
+                        profilerSW = new ExecutionTimeStopWatch();
+                        profilerSW.start();
+
+                        // The key of this job: nodeId + JobId + Joblet hash code
+                        nodeJobSignature = ctx.getJobletContext().getApplicationContext().getNodeId() + "_"
+                                + ctx.getJobletContext().getJobId() + "_" + ctx.getJobletContext().hashCode();
+
+                        // taskId: partition + taskId + started time
+                        taskId = ctx.getTaskAttemptId() + this.toString() + profilerSW.getStartTimeStamp();
+
+                        // Initialize the counter for this runtime instance
+                        OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler.add(nodeJobSignature, taskId,
+                                ExecutionTimeProfiler.INIT, false);
+                        System.out.println("SPLIT open() " + nodeJobSignature + " " + taskId);
+                    }
 
                     if (requiresMaterialization) {
                         state = new MaterializerTaskState(ctx.getJobletContext().getJobId(), new TaskId(
@@ -149,6 +174,11 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
 
                 @Override
                 public void nextFrame(ByteBuffer bufferAccessor) throws HyracksDataException {
+                    // Added to measure the execution time when the profiler setting is enabled
+                    if (ExecutionTimeProfiler.PROFILE_MODE) {
+                        profilerSW.resume();
+                    }
+
                     if (requiresMaterialization) {
                         state.appendFrame(bufferAccessor);
                     }
@@ -157,14 +187,28 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                     int tupleCount = accessor.getTupleCount();
                     int resultValue = 0;
 
-                    for (int i = 0; i < tupleCount; i++) {
-                        resultValue = intInsepctor.getIntegerValue(
-                                accessor.getBuffer().array(),
-                                accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
-                                        + accessor.getFieldStartOffset(i, conditionalVarFieldPos),
-                                accessor.getFieldLength(i, conditionalVarFieldPos));
+                    if (!ExecutionTimeProfiler.PROFILE_MODE) {
+                        for (int i = 0; i < tupleCount; i++) {
+                            resultValue = intInsepctor.getIntegerValue(
+                                    accessor.getBuffer().array(),
+                                    accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
+                                            + accessor.getFieldStartOffset(i, conditionalVarFieldPos),
+                                    accessor.getFieldLength(i, conditionalVarFieldPos));
 
-                        FrameUtils.appendToWriter(writers[resultValue], appenders[resultValue], accessor, i);
+                            FrameUtils.appendToWriter(writers[resultValue], appenders[resultValue], accessor, i);
+                        }
+                    } else {
+                        // Added to measure the execution time when the profiler setting is enabled
+                        for (int i = 0; i < tupleCount; i++) {
+                            resultValue = intInsepctor.getIntegerValue(
+                                    accessor.getBuffer().array(),
+                                    accessor.getTupleStartOffset(i) + accessor.getFieldSlotsLength()
+                                            + accessor.getFieldStartOffset(i, conditionalVarFieldPos),
+                                    accessor.getFieldLength(i, conditionalVarFieldPos));
+
+                            FrameUtils.appendToWriter(writers[resultValue], appenders[resultValue], accessor, i,
+                                    profilerSW);
+                        }
                     }
                 }
 
@@ -178,6 +222,16 @@ public class SplitOperatorDescriptor extends AbstractOperatorDescriptor {
                         appenders[i].flush(writers[i], true);
                         writers[i].close();
                     }
+
+                    // Added to measure the execution time when the profiler setting is enabled
+                    if (ExecutionTimeProfiler.PROFILE_MODE) {
+                        profilerSW.finish();
+                        OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler.add(nodeJobSignature, taskId,
+                                profilerSW.getMessage("SPLIT\t" + ctx.getTaskAttemptId() + "\t" + this.toString(),
+                                        profilerSW.getStartTimeStamp()), false);
+                        System.out.println("SPLIT close() " + nodeJobSignature + " " + taskId);
+                    }
+
                 }
 
                 @Override

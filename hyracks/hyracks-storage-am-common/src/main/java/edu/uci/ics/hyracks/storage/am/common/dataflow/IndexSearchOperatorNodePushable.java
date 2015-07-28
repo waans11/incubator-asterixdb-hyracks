@@ -26,7 +26,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.util.ExecutionTimeProfiler;
 import edu.uci.ics.hyracks.api.util.OperatorExecutionTimeProfiler;
-import edu.uci.ics.hyracks.api.util.StopWatch;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -73,7 +73,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected PermutingFrameTupleReference maxFilterKey;
 
     // Added to measure the execution time when the profiler setting is enabled
-    private StopWatch profilerSW;
+    private ExecutionTimeStopWatch profilerSW;
     private String nodeJobSignature;
     private String taskId;
 
@@ -114,9 +114,13 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     @Override
     public void open() throws HyracksDataException {
+        indexHelper.open();
+        index = indexHelper.getIndexInstance();
+        searchPred = createSearchPredicate();
+
         // Added to measure the execution time when the profiler setting is enabled
         if (ExecutionTimeProfiler.PROFILE_MODE) {
-            profilerSW = new StopWatch();
+            profilerSW = new ExecutionTimeStopWatch();
             profilerSW.start();
 
             // The key of this job: nodeId + JobId + Joblet hash code
@@ -129,13 +133,11 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             // Initialize the counter for this runtime instance
             OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler.add(nodeJobSignature, taskId,
                     ExecutionTimeProfiler.INIT, false);
-            System.out.println("INDEX_SEARCH open() " + nodeJobSignature + " " + taskId);
+            System.out.println(searchPred.applicableIndexType() + "_SEARCH start " + nodeJobSignature + " " + taskId);
         }
 
         accessor = new FrameTupleAccessor(inputRecDesc);
         writer.open();
-        indexHelper.open();
-        index = indexHelper.getIndexInstance();
 
         if (retainNull) {
             int fieldCount = getFieldCount();
@@ -154,7 +156,6 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         }
 
         try {
-            searchPred = createSearchPredicate();
             tb = new ArrayTupleBuilder(recordDesc.getFieldCount());
             dos = tb.getDataOutput();
             appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
@@ -191,6 +192,8 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             }
             ITupleReference tuple = cursor.getTuple();
             for (int i = 0; i < tuple.getFieldCount(); i++) {
+                dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
+                tb.addFieldEndOffset();
                 //                ByteArrayInputStream inStreamZero = new ByteArrayInputStream(tuple.getFieldData(i),
                 //                        tuple.getFieldStart(i), tuple.getFieldLength(i));
                 //                int fieldNo = i;
@@ -199,20 +202,39 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 //                }
                 //                Object test = outputRecDesc.getFields()[fieldNo].deserialize(new DataInputStream(inStreamZero));
                 //                System.out.println(test + " " + opDesc.getActivityId());
-                dos.write(tuple.getFieldData(i), tuple.getFieldStart(i), tuple.getFieldLength(i));
-                tb.addFieldEndOffset();
             }
-            FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+            // Added to measure the execution time when the profiler setting is enabled
+            if (!ExecutionTimeProfiler.PROFILE_MODE) {
+                FrameUtils
+                        .appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize());
+            } else {
+                // If the profiler is ON, then we use stopwatch to measure the time.
+                FrameUtils.appendToWriter(writer, appender, tb.getFieldEndOffsets(), tb.getByteArray(), 0,
+                        tb.getSize(), profilerSW);
+            }
         }
 
         if (!matched && retainInput && retainNull) {
-            FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex,
-                    nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0, nullTupleBuild.getSize());
+            if (!ExecutionTimeProfiler.PROFILE_MODE) {
+                FrameUtils
+                        .appendConcatToWriter(writer, appender, accessor, tupleIndex,
+                                nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0,
+                                nullTupleBuild.getSize());
+            } else {
+                FrameUtils.appendConcatToWriter(writer, appender, accessor, tupleIndex,
+                        nullTupleBuild.getFieldEndOffsets(), nullTupleBuild.getByteArray(), 0,
+                        nullTupleBuild.getSize(), profilerSW);
+            }
         }
     }
 
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+        // Added to measure the execution time when the profiler setting is enabled
+        if (ExecutionTimeProfiler.PROFILE_MODE) {
+            profilerSW.resume();
+        }
+
         accessor.reset(buffer);
         int tupleCount = accessor.getTupleCount();
         try {
@@ -224,6 +246,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             }
         } catch (Exception e) {
             throw new HyracksDataException(e);
+        }
+        // Added to measure the execution time when the profiler setting is enabled
+        if (ExecutionTimeProfiler.PROFILE_MODE) {
+            profilerSW.suspend();
         }
     }
 
@@ -237,6 +263,18 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 throw new HyracksDataException(e);
             }
             writer.close();
+            // Added to measure the execution time when the profiler setting is enabled
+            if (ExecutionTimeProfiler.PROFILE_MODE) {
+                profilerSW.finish();
+
+                OperatorExecutionTimeProfiler.INSTANCE.executionTimeProfiler.add(
+                        nodeJobSignature,
+                        taskId,
+                        profilerSW.getMessage(searchPred.applicableIndexType() + "_SEARCH\t" + ctx.getTaskAttemptId()
+                                + "\t" + this.toString(), profilerSW.getStartTimeStamp()), false);
+                System.out.println(searchPred.applicableIndexType() + "_SEARCH close() " + nodeJobSignature + " "
+                        + taskId);
+            }
         } finally {
             indexHelper.close();
         }

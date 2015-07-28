@@ -16,7 +16,7 @@ package edu.uci.ics.hyracks.api.util;
 
 import java.text.SimpleDateFormat;
 
-public class StopWatch {
+public class ExecutionTimeStopWatch {
     private long startTime = 0;
     private long stopTime = 0;
     private long elapsedTime = 0;

@@ -99,4 +99,9 @@ public class RangePredicate extends AbstractSearchPredicate {
         return highKeyInclusive;
     }
 
+    @Override
+    public String applicableIndexType() {
+        return "BTREE_INDEX";
+    }
+
 }

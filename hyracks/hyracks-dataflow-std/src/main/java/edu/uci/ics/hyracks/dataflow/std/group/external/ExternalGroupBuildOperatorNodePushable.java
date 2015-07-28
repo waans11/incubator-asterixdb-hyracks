@@ -24,7 +24,7 @@ import edu.uci.ics.hyracks.api.dataflow.value.INormalizedKeyComputerFactory;
 import edu.uci.ics.hyracks.api.dataflow.value.RecordDescriptor;
 import edu.uci.ics.hyracks.api.exceptions.HyracksDataException;
 import edu.uci.ics.hyracks.api.io.FileReference;
-import edu.uci.ics.hyracks.api.util.StopWatch;
+import edu.uci.ics.hyracks.api.util.ExecutionTimeStopWatch;
 import edu.uci.ics.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileReader;
 import edu.uci.ics.hyracks.dataflow.common.io.RunFileWriter;
@@ -49,7 +49,7 @@ class ExternalGroupBuildOperatorNodePushable extends AbstractUnaryInputSinkOpera
     private ExternalGroupState state;
 
     // For Experiment Profiler
-	private StopWatch profilerSW;
+	private ExecutionTimeStopWatch profilerSW;
 	private String nodeJobSignature;
 	private String taskId;
 
