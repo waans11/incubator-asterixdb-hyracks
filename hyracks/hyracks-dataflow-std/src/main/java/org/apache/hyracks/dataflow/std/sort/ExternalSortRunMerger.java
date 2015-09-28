@@ -182,7 +182,7 @@ public class ExternalSortRunMerger {
                             mergedMaxFrameSize = merge(mergeResultWriter, partialRuns);
                             mergeResultWriter.close();
 
-                            reader = mergeFileWriter.createReader();
+                            reader = mergeFileWriter.createDeleteOnCloseReader();
                         }
 
                         appendNewRuns(reader, mergedMaxFrameSize);
