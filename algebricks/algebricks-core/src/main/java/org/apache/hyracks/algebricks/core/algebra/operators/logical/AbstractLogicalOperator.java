@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -57,6 +56,20 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
         UNPARTITIONED,
         PARTITIONED,
         LOCAL
+    }
+
+    // The code used for canDecreaseCardinality() - whether this operator can decrease the input cardinality
+    public static enum canDecreaseCardinalityCode {
+        TRUE,
+        FALSE,
+        NOTAPPLICABLE
+    }
+
+    // The code used for canPreserveOrder() - whether this operator can preserve the input order
+    public static enum canPreserveOrderCode {
+        TRUE,
+        FALSE,
+        NOTAPPLICABLE
     }
 
     private AbstractLogicalOperator.ExecutionMode mode = AbstractLogicalOperator.ExecutionMode.UNPARTITIONED;
@@ -190,5 +203,19 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public boolean requiresVariableReferenceExpressions() {
         return true;
+    }
+
+    // This method is designed to be used for pushing-down the LIMIT operator's information.
+    // This method should return FALSE to be able to push-down the LIMIT information.
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.NOTAPPLICABLE;
+    }
+
+    // This method is designed to be used for pushing-down the LIMIT operator's information
+    // This method should return TRUE to be able to push-down the LIMIT information.
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.NOTAPPLICABLE;
     }
 }

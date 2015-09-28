@@ -219,10 +219,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected void writeSearchResults(int tupleIndex) throws Exception {
         boolean matched = false;
-        //        if (useLimitNumberOfResult) {
-        //            LOGGER.log(LVL, "***** [Index-only experiment] INDEX-SEARCH LIMIT push-down will be applied. LIMIT count:"
-        //                    + limitNumberOfResult + " " + searchedTupleCount);
-        //        }
+        if (useLimitNumberOfResult) {
+            LOGGER.log(LVL, "***** [Index-only experiment] INDEX-SEARCH LIMIT push-down will be applied. LIMIT count:"
+                    + limitNumberOfResult + " searched count: " + searchedTupleCount);
+        }
         while (cursor.hasNext()) {
             matched = true;
             tb.reset();
@@ -295,7 +295,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 if (searchedTupleCount >= limitNumberOfResult) {
                     LOGGER.log(LVL,
                             "***** [Index-only experiment] INDEX-SEARCH LIMIT push-down has been applied. LIMIT count:"
-                                    + limitNumberOfResult);
+                                    + limitNumberOfResult + " searched count: " + searchedTupleCount);
                     break;
                 }
             }

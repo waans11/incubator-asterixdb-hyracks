@@ -22,10 +22,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.canDecreaseCardinalityCode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.canPreserveOrderCode;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -103,4 +104,15 @@ public interface ILogicalOperator {
      * Indicates whether the expressions used by this operator must be variable reference expressions.
      */
     public boolean requiresVariableReferenceExpressions();
+
+    /**
+     * Indicates whether a given operator can decrease the cardinality of its input.
+     */
+    public canDecreaseCardinalityCode canDecreaseCardinality();
+
+    /**
+     * Indicates whether a given operator can preserve the input order.
+     */
+    public canPreserveOrderCode canPreserveOrder();
+
 }
