@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -71,6 +70,16 @@ public class LeftOuterJoinOperator extends AbstractBinaryJoinOperator {
         VariableUtilities.getLiveVariables(inputs.get(1).getValue(), liveVars); // live variables from outer branch can be null together
         env.getCorrelatedNullableVariableLists().add(liveVars);
         return env;
+    }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.CANBEBOTH;
     }
 
 }

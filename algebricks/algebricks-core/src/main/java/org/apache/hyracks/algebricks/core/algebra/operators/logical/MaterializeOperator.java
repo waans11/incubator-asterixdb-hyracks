@@ -67,4 +67,14 @@ public class MaterializeOperator extends AbstractLogicalOperator {
         schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
     }
 
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.TRUE;
+    }
+
 }

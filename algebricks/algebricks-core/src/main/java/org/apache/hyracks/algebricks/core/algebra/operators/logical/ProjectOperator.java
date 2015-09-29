@@ -84,4 +84,14 @@ public class ProjectOperator extends AbstractLogicalOperator {
         return createPropagatingAllInputsTypeEnvironment(ctx);
     }
 
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.TRUE;
+    }
+
 }

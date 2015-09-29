@@ -62,6 +62,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     public static enum canDecreaseCardinalityCode {
         TRUE,
         FALSE,
+        CANBEBOTH,
         NOTAPPLICABLE
     }
 
@@ -69,6 +70,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     public static enum canPreserveOrderCode {
         TRUE,
         FALSE,
+        CANBEBOTH,
         NOTAPPLICABLE
     }
 

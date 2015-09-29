@@ -119,4 +119,14 @@ public class AssignOperator extends AbstractAssignOperator {
     public void setExplicitOrderingProperty(LocalOrderProperty explicitOrderingProperty) {
         this.explicitOrderingProperty = explicitOrderingProperty;
     }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.TRUE;
+    }
 }

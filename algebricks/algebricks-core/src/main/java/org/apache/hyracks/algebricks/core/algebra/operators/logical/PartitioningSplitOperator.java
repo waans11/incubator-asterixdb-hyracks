@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -51,7 +50,8 @@ public class PartitioningSplitOperator extends AbstractLogicalOperator {
     private final List<Mutable<ILogicalExpression>> expressions;
     private final int defaultBranchIndex;
 
-    public PartitioningSplitOperator(List<Mutable<ILogicalExpression>> expressions, int defaultBranchIndex) throws AlgebricksException {
+    public PartitioningSplitOperator(List<Mutable<ILogicalExpression>> expressions, int defaultBranchIndex)
+            throws AlgebricksException {
         this.expressions = expressions;
         this.defaultBranchIndex = defaultBranchIndex;
         // Check that the default output branch index is in [0, N], where N is the number of expressions.
@@ -69,11 +69,11 @@ public class PartitioningSplitOperator extends AbstractLogicalOperator {
     public int getDefaultBranchIndex() {
         return defaultBranchIndex;
     }
-    
+
     public int getNumOutputBranches() {
         return (defaultBranchIndex == expressions.size()) ? expressions.size() + 1 : expressions.size();
     }
-    
+
     @Override
     public LogicalOperatorTag getOperatorTag() {
         return LogicalOperatorTag.PARTITIONINGSPLIT;
@@ -114,6 +114,16 @@ public class PartitioningSplitOperator extends AbstractLogicalOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         return createPropagatingAllInputsTypeEnvironment(ctx);
+    }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.FALSE;
     }
 
 }
