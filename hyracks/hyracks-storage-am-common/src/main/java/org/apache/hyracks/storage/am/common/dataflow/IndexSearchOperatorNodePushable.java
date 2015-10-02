@@ -125,14 +125,20 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             maxFilterKey.setFieldPermutation(maxFilterFieldIndexes);
         }
 
-        // Used for LIMIT push-down
-        this.limitNumberOfResult = opDesc.getLimitNumberOfResult();
+        // Used to generate trust-worthy search results
         this.useOpercationCallbackProceedReturnResult = opDesc.getUseOpercationCallbackProceedReturnResult();
-        if (this.useOpercationCallbackProceedReturnResult && this.limitNumberOfResult > -1) {
-            this.useLimitNumberOfResult = true;
-            this.rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+
+        if (this.useOpercationCallbackProceedReturnResult) {
             this.valuesForOpercationCallbackProceedReturnResult = opDesc
                     .getValuesForOpercationCallbackProceedReturnResult();
+            this.rawComp = RawBinaryComparatorFactory.INSTANCE.createBinaryComparator();
+        }
+
+        // Used for LIMIT push-down
+        this.limitNumberOfResult = opDesc.getLimitNumberOfResult();
+
+        if (this.limitNumberOfResult > -1) {
+            this.useLimitNumberOfResult = true;
         }
     }
 
@@ -283,11 +289,16 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             if (useLimitNumberOfResult) {
                 int lastIndex = tuple.getFieldCount() - 1;
 
-                // Only count the number of tuples that the proceedReturnResult was successful.
-                // This means that we are getting a trustworthy tuple.
-                if (rawComp.compare(tuple.getFieldData(lastIndex), tuple.getFieldStart(lastIndex),
-                        tuple.getFieldLength(lastIndex), valuesForOpercationCallbackProceedReturnResult,
-                        tuple.getFieldLength(lastIndex), tuple.getFieldLength(lastIndex)) == 0) {
+                if (useOpercationCallbackProceedReturnResult) {
+                    // Only count the number of tuples that the proceedReturnResult was successful.
+                    // This means that we are getting a trustworthy tuple.
+                    if (rawComp.compare(tuple.getFieldData(lastIndex), tuple.getFieldStart(lastIndex),
+                            tuple.getFieldLength(lastIndex), valuesForOpercationCallbackProceedReturnResult,
+                            tuple.getFieldLength(lastIndex), tuple.getFieldLength(lastIndex)) == 0) {
+                        searchedTupleCount++;
+                    }
+                } else {
+                    // We assume that the index can generate the trustworthy results. (e.g., primary index)
                     searchedTupleCount++;
                 }
 

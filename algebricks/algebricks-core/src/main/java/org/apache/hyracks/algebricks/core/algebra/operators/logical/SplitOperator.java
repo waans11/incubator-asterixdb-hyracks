@@ -23,7 +23,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
@@ -137,4 +136,15 @@ public class SplitOperator extends AbstractLogicalOperator {
         }
         return false;
     }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.FALSE;
+    }
+
 }

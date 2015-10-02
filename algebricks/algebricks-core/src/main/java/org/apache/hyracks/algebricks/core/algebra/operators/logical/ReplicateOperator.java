@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -118,4 +117,15 @@ public class ReplicateOperator extends AbstractLogicalOperator {
         }
         return false;
     }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.TRUE;
+    }
+
 }

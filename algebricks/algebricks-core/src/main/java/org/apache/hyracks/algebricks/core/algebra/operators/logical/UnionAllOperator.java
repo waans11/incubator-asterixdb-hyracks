@@ -121,4 +121,14 @@ public class UnionAllOperator extends AbstractLogicalOperator {
         return env;
     }
 
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.FALSE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.FALSE;
+    }
+
 }

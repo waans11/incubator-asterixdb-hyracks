@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -127,6 +126,24 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
 
     public List<Mutable<ILogicalExpression>> getAdditionalFilteringExpressions() {
         return additionalFilteringExpressions;
+    }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        if (propagateInput) {
+            return canDecreaseCardinalityCode.FALSE;
+        } else {
+            return canDecreaseCardinalityCode.TRUE;
+        }
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        if (propagateInput) {
+            return canPreserveOrderCode.TRUE;
+        } else {
+            return canPreserveOrderCode.FALSE;
+        }
     }
 
     /*

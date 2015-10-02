@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -78,6 +77,16 @@ public class RunningAggregateOperator extends AbstractAssignOperator {
                             env));
         }
         return env;
+    }
+
+    @Override
+    public canDecreaseCardinalityCode canDecreaseCardinality() {
+        return canDecreaseCardinalityCode.TRUE;
+    }
+
+    @Override
+    public canPreserveOrderCode canPreserveOrder() {
+        return canPreserveOrderCode.FALSE;
     }
 
 }
