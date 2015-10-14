@@ -40,4 +40,6 @@ public interface IIndexDataflowHelper {
     public IHyracksTaskContext getTaskContext();
 
     public boolean needKeyDuplicateCheck();
+
+    public String getResourceName();
 }

@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
 import java.util.List;
@@ -34,6 +33,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessorInternal;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
+import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListCursor;
 
@@ -110,11 +110,12 @@ public class LSMInvertedIndexAccessor implements ILSMIndexAccessorInternal, IInv
     }
 
     @Override
-    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload) throws HyracksDataException {
+    public void scheduleReplication(List<ILSMComponent> lsmComponents, boolean bulkload, LSMOperationType opType)
+            throws HyracksDataException {
         ctx.setOperation(IndexOperation.REPLICATE);
         ctx.getComponentsToBeReplicated().clear();
         ctx.getComponentsToBeReplicated().addAll(lsmComponents);
-        lsmHarness.scheduleReplication(ctx, lsmComponents, bulkload);
+        lsmHarness.scheduleReplication(ctx, lsmComponents, bulkload, opType);
     }
 
     @Override

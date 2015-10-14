@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.hyracks.storage.am.lsm.common.api;
 
 import java.util.List;
@@ -85,8 +84,8 @@ public interface ILSMIndexInternal extends ILSMIndex {
     public void markAsValid(ILSMComponent lsmComponent) throws HyracksDataException;
 
     public boolean isCurrentMutableComponentEmpty() throws HyracksDataException;
-    
+
     public void scheduleReplication(ILSMIndexOperationContext ctx, List<ILSMComponent> lsmComponents, boolean bulkload,
-            ReplicationOperation operation) throws HyracksDataException;
+            ReplicationOperation operation, LSMOperationType opType) throws HyracksDataException;
 
 }

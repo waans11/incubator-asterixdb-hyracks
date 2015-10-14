@@ -153,6 +153,43 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
+    // Gets the index of a child to start top-down data property enforcement.
+    // If there is a partitioning-compatible child with the operator in opRef, start from this child;
+    // otherwise, start from child zero.
+    private int getStartChildIndex(AbstractLogicalOperator op, PhysicalRequirements pr, boolean nestedPlan,
+            IOptimizationContext context) throws AlgebricksException {
+        IPhysicalPropertiesVector[] reqdProperties = null;
+        if (pr != null) {
+            reqdProperties = pr.getRequiredProperties();
+        }
+
+        List<IPartitioningProperty> deliveredPartitioningPropertiesFromChildren = new ArrayList<IPartitioningProperty>();
+        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
+            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
+            deliveredPartitioningPropertiesFromChildren.add(child.getDeliveredPhysicalProperties()
+                    .getPartitioningProperty());
+        }
+        int partitioningCompatibleChild = 0;
+        for (int i = 0; i < op.getInputs().size(); i++) {
+            IPartitioningProperty deliveredPropertyFromChild = deliveredPartitioningPropertiesFromChildren.get(i);
+            if (reqdProperties == null
+                    || reqdProperties[i] == null
+                    || reqdProperties[i].getPartitioningProperty() == null
+                    || deliveredPropertyFromChild == null
+                    || reqdProperties[i].getPartitioningProperty().getPartitioningType() != deliveredPartitioningPropertiesFromChildren
+                            .get(i).getPartitioningType()) {
+                continue;
+            }
+            IPartitioningProperty requiredPropertyForChild = reqdProperties[i].getPartitioningProperty();
+            // If child i's delivered partitioning property already satisfies the required property, stop and return the child index.
+            if (PropertiesUtil.matchPartitioningProps(requiredPropertyForChild, deliveredPropertyFromChild, true)) {
+                partitioningCompatibleChild = i;
+                break;
+            }
+        }
+        return partitioningCompatibleChild;
+    }
+
     private boolean physOptimizeOp(Mutable<ILogicalOperator> opRef, IPhysicalPropertiesVector required,
             boolean nestedPlan, IOptimizationContext context) throws AlgebricksException {
 
@@ -199,23 +236,31 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             }
         }
 
+        // The child index of the child operator to optimize first.
+        int startChildIndex = getStartChildIndex(op, pr, nestedPlan, context);
         IPartitioningProperty firstDeliveredPartitioning = null;
-        int i = 0;
-        for (Mutable<ILogicalOperator> childRef : op.getInputs()) {
-            AbstractLogicalOperator child = (AbstractLogicalOperator) childRef.getValue();
+        // Enforce data properties in a top-down manner.
+        for (int j = 0; j < op.getInputs().size(); j++) {
+            // Starts from a partitioning-compatible child if any to loop over all children.
+            int childIndex = (j + startChildIndex) % op.getInputs().size();
+            IPhysicalPropertiesVector requiredProperty = reqdProperties[childIndex];
+            AbstractLogicalOperator child = (AbstractLogicalOperator) op.getInputs().get(childIndex).getValue();
             IPhysicalPropertiesVector delivered = child.getDeliveredPhysicalProperties();
 
             AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Properties delivered by " + child.getPhysicalOperator()
                     + ": " + delivered + "\n");
             IPartitioningRequirementsCoordinator prc = pr.getPartitioningCoordinator();
+            // Coordinates requirements by looking at the firstDeliveredPartitioning.
             Pair<Boolean, IPartitioningProperty> pbpp = prc.coordinateRequirements(
-                    reqdProperties[i].getPartitioningProperty(), firstDeliveredPartitioning, op, context);
+                    requiredProperty.getPartitioningProperty(), firstDeliveredPartitioning, op, context);
             boolean mayExpandPartitioningProperties = pbpp.first;
             IPhysicalPropertiesVector rqd = new StructuralPropertiesVector(pbpp.second,
-                    reqdProperties[i].getLocalProperties());
+                    requiredProperty.getLocalProperties());
 
             AlgebricksConfig.ALGEBRICKS_LOGGER.fine(">>>> Required properties for " + child.getPhysicalOperator()
                     + ": " + rqd + "\n");
+            // The partitioning property of reqdProperties[childIndex] could be updated here because
+            // rqd.getPartitioningProperty() is the same object instance as requiredProperty.getPartitioningProperty().
             IPhysicalPropertiesVector diff = delivered.getUnsatisfiedPropertiesFrom(rqd,
                     mayExpandPartitioningProperties, context.getEquivalenceClassMap(child), context.getFDList(child));
 
@@ -225,9 +270,9 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
 
             if (diff != null) {
                 changed = true;
-                addEnforcers(op, i, diff, rqd, delivered, childrenDomain, nestedPlan, context);
+                addEnforcers(op, childIndex, diff, rqd, delivered, childrenDomain, nestedPlan, context);
 
-                AbstractLogicalOperator newChild = ((AbstractLogicalOperator) op.getInputs().get(i).getValue());
+                AbstractLogicalOperator newChild = ((AbstractLogicalOperator) op.getInputs().get(childIndex).getValue());
 
                 if (newChild != child) {
                     delivered = newChild.getDeliveredPhysicalProperties();
@@ -240,8 +285,8 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                         break;
                     }
                 }
-
             }
+
             if (firstDeliveredPartitioning == null) {
                 IPartitioningProperty dpp = delivered.getPartitioningProperty();
                 if (dpp.getPartitioningType() == PartitioningType.ORDERED_PARTITIONED
@@ -249,8 +294,6 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
                     firstDeliveredPartitioning = dpp;
                 }
             }
-
-            i++;
         }
 
         if (op.hasNestedPlans()) {
@@ -277,7 +320,6 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             // Now, transfer annotations from the original sort op. to this one.
             AbstractLogicalOperator transferTo = nextOp;
             if (transferTo.getOperatorTag() == LogicalOperatorTag.EXCHANGE) {
-                //
                 // remove duplicate exchange operator
                 transferTo = (AbstractLogicalOperator) transferTo.getInputs().get(0).getValue();
             }
@@ -596,7 +638,6 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
             }
             return ordCols;
         }
-
     }
 
     private void setNewOp(Mutable<ILogicalOperator> opRef, AbstractLogicalOperator newOp, IOptimizationContext context)

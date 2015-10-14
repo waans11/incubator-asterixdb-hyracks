@@ -46,8 +46,8 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
     public IPushRuntime createPushRuntime(final IHyracksTaskContext ctx) throws HyracksDataException {
         return new AbstractOneInputSourcePushRuntime() {
 
-            private ArrayTupleBuilder tb = new ArrayTupleBuilder(0);
-            private FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
+            private final ArrayTupleBuilder tb = new ArrayTupleBuilder(0);
+            private final FrameTupleAppender appender = new FrameTupleAppender(new VSizeFrame(ctx));
 
             // Added to measure the execution time when the profiler setting is enabled
             private ExecutionTimeStopWatch profilerSW;
@@ -76,30 +76,27 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
                 }
 
                 writer.open();
-                try {
-                    // Added to measure the execution time when the profiler setting is enabled
-                    if (ExecutionTimeProfiler.PROFILE_MODE) {
-                        profilerSW.resume();
-                    }
 
-                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                        throw new IllegalStateException();
-                    }
-
-                    // Added to measure the execution time when the profiler setting is enabled
-                    if (ExecutionTimeProfiler.PROFILE_MODE) {
-                        profilerSW.suspend();
-                    }
-
-                    appender.flush(writer, true);
-                } finally {
-                    writer.close();
+                // Added to measure the execution time when the profiler setting is enabled
+                if (ExecutionTimeProfiler.PROFILE_MODE) {
+                    profilerSW.resume();
                 }
 
+                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                    throw new IllegalStateException();
+                }
+
+                // Added to measure the execution time when the profiler setting is enabled
+                if (ExecutionTimeProfiler.PROFILE_MODE) {
+                    profilerSW.suspend();
+                }
+
+                appender.flush(writer, true);
             }
 
             @Override
             public void close() throws HyracksDataException {
+                writer.close();
                 // Added to measure the execution time when the profiler setting is enabled
                 if (ExecutionTimeProfiler.PROFILE_MODE) {
                     profilerSW.finish();
