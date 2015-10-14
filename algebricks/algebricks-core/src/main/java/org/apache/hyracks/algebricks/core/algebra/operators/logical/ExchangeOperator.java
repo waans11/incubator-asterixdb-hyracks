@@ -22,10 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
-import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -81,24 +79,12 @@ public class ExchangeOperator extends AbstractLogicalOperator {
 
     @Override
     public canDecreaseCardinalityCode canDecreaseCardinality() {
-        IPhysicalOperator pOp = this.getPhysicalOperator();
-        if (pOp == null) {
-            return canDecreaseCardinalityCode.NOTAPPLICABLE;
-        } else {
-            return canDecreaseCardinalityCode.FALSE;
-        }
+        return canDecreaseCardinalityCode.FALSE;
     }
 
     @Override
     public canPreserveOrderCode canPreserveOrder() {
-        IPhysicalOperator pOp = this.getPhysicalOperator();
-        if (pOp == null) {
-            return canPreserveOrderCode.NOTAPPLICABLE;
-        } else if (pOp.getOperatorTag() == PhysicalOperatorTag.ONE_TO_ONE_EXCHANGE) {
-            return canPreserveOrderCode.TRUE;
-        } else {
-            return canPreserveOrderCode.FALSE;
-        }
+        return canPreserveOrderCode.TRUE;
     }
 
 }

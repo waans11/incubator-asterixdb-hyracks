@@ -76,23 +76,26 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
                 }
 
                 writer.open();
+                try {
+                    // Added to measure the execution time when the profiler setting is enabled
+                    if (ExecutionTimeProfiler.PROFILE_MODE) {
+                        profilerSW.resume();
+                    }
 
-                // Added to measure the execution time when the profiler setting is enabled
-                if (ExecutionTimeProfiler.PROFILE_MODE) {
-                    profilerSW.resume();
+                    if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
+                        throw new IllegalStateException();
+                    }
+
+                    // Added to measure the execution time when the profiler setting is enabled
+                    if (ExecutionTimeProfiler.PROFILE_MODE) {
+                        profilerSW.suspend();
+                    }
+
+                    appender.flush(writer, true);
+                } finally {
+                    writer.close();
                 }
 
-                if (!appender.append(tb.getFieldEndOffsets(), tb.getByteArray(), 0, tb.getSize())) {
-                    throw new IllegalStateException();
-                }
-
-                // Added to measure the execution time when the profiler setting is enabled
-                if (ExecutionTimeProfiler.PROFILE_MODE) {
-                    profilerSW.suspend();
-                }
-
-                appender.flush(writer, true);
-                writer.close();
             }
 
             @Override
@@ -111,4 +114,5 @@ public class EmptyTupleSourceRuntimeFactory implements IPushRuntimeFactory {
 
         };
     }
+
 }

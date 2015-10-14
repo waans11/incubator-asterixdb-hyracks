@@ -48,6 +48,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
     private final int[] maxFilterFieldIndexes;
     protected boolean useOpercationCallbackProceedReturnResult;
     protected byte[] valuesForUseOperationCallbackProceedReturnResult;
+    protected long limitNumberOfResult;
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
             IStorageManagerInterface storageManager, IFileSplitProvider fileSplitProvider,
@@ -62,7 +63,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
         this(spec, queryField, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, btreeDataflowHelperFactory,
                 queryTokenizerFactory, searchModifierFactory, recDesc, retainInput, retainNull, nullWriterFactory,
-                searchOpCallbackProvider, minFilterFieldIndexes, maxFilterFieldIndexes, false, null);
+                searchOpCallbackProvider, minFilterFieldIndexes, maxFilterFieldIndexes, false, null, -1);
     }
 
     public LSMInvertedIndexSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, int queryField,
@@ -75,7 +76,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
             boolean retainNull, INullWriterFactory nullWriterFactory,
             ISearchOperationCallbackFactory searchOpCallbackProvider, int[] minFilterFieldIndexes,
             int[] maxFilterFieldIndexes, boolean useOpercationCallbackProceedReturnResult,
-            byte[] valuesForUseOperationCallbackProceedReturnResult) {
+            byte[] valuesForUseOperationCallbackProceedReturnResult, long limitNumberOfResult) {
 
         super(spec, 1, 1, recDesc, storageManager, fileSplitProvider, lifecycleManagerProvider, tokenTypeTraits,
                 tokenComparatorFactories, invListsTypeTraits, invListComparatorFactories, queryTokenizerFactory,
@@ -88,6 +89,7 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
         this.useOpercationCallbackProceedReturnResult = useOpercationCallbackProceedReturnResult;
         this.valuesForUseOperationCallbackProceedReturnResult = valuesForUseOperationCallbackProceedReturnResult;
+        this.limitNumberOfResult = limitNumberOfResult;
     }
 
     @Override
@@ -107,4 +109,10 @@ public class LSMInvertedIndexSearchOperatorDescriptor extends AbstractLSMInverte
     public byte[] getValuesForOpercationCallbackProceedReturnResult() {
         return valuesForUseOperationCallbackProceedReturnResult;
     }
+
+    @Override
+    public long getLimitNumberOfResult() {
+        return limitNumberOfResult;
+    }
+
 }

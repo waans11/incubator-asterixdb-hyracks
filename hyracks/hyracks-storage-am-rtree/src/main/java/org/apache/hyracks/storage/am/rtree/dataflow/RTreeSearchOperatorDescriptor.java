@@ -45,6 +45,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     protected final int[] maxFilterFieldIndexes;
     protected boolean useOpercationCallbackProceedReturnResult;
     protected byte[] valuesForUseOperationCallbackProceedReturnResult;
+    protected long limitNumberOfResult;
 
     public RTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
             IStorageManagerInterface storageManager, IIndexLifecycleManagerProvider lifecycleManagerProvider,
@@ -55,7 +56,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes) {
         this(spec, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, keyFields, dataflowHelperFactory, retainInput, retainNull, nullWriterFactory,
-                searchOpCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, false, null);
+                searchOpCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes, false, null, -1);
     }
 
     public RTreeSearchOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor recDesc,
@@ -65,7 +66,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
             IIndexDataflowHelperFactory dataflowHelperFactory, boolean retainInput, boolean retainNull,
             INullWriterFactory nullWriterFactory, ISearchOperationCallbackFactory searchOpCallbackFactory,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, boolean useOpercationCallbackProceedReturnResult,
-            byte[] valuesForUseOperationCallbackProceedReturnResult) {
+            byte[] valuesForUseOperationCallbackProceedReturnResult, long limitNumberOfResult) {
 
         super(spec, 1, 1, recDesc, storageManager, lifecycleManagerProvider, fileSplitProvider, typeTraits,
                 comparatorFactories, null, dataflowHelperFactory, null, retainInput, retainNull, nullWriterFactory,
@@ -76,6 +77,7 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
         this.maxFilterFieldIndexes = maxFilterFieldIndexes;
         this.useOpercationCallbackProceedReturnResult = useOpercationCallbackProceedReturnResult;
         this.valuesForUseOperationCallbackProceedReturnResult = valuesForUseOperationCallbackProceedReturnResult;
+        this.limitNumberOfResult = limitNumberOfResult;
     }
 
     @Override
@@ -93,5 +95,10 @@ public class RTreeSearchOperatorDescriptor extends AbstractTreeIndexOperatorDesc
     @Override
     public byte[] getValuesForOpercationCallbackProceedReturnResult() {
         return valuesForUseOperationCallbackProceedReturnResult;
+    }
+
+    @Override
+    public long getLimitNumberOfResult() {
+        return limitNumberOfResult;
     }
 }
