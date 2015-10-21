@@ -45,10 +45,10 @@ public interface IMetadataProvider<S, I> {
      * contributeSchedulingConstraints instead.
      */
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getScannerRuntime(IDataSource<S> dataSource,
-            List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, boolean projectPushed,
-            List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars, IOperatorSchema opSchema,
-            IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig)
-            throws AlgebricksException;
+            List<LogicalVariable> scanVariables, List<LogicalVariable> projectVariables, long limitNumberOfResult,
+            boolean projectPushed, List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
+            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context,
+            JobSpecification jobSpec, Object implConfig) throws AlgebricksException;
 
     public boolean scannerOperatorIsLeaf(IDataSource<S> dataSource);
 

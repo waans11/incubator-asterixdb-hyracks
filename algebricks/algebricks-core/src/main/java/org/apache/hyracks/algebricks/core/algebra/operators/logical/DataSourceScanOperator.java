@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -44,9 +43,19 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
     private List<LogicalVariable> minFilterVars;
     private List<LogicalVariable> maxFilterVars;
 
+    // If the number is given, data-source scan just generates the given number of results.
+    // This is mainly used for passing LIMIT information to this operator.
+    // The default value: -1 means there is no limit.
+    private long limitNumberOfResult = -1;
+
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
+        this(variables, dataSource, -1);
+    }
+
+    public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource, long limitNumberOfResult) {
         super(variables, dataSource);
         projectVars = new ArrayList<LogicalVariable>();
+        this.limitNumberOfResult = limitNumberOfResult;
     }
 
     @Override
@@ -80,6 +89,14 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
 
     public boolean isProjectPushed() {
         return projectPushed;
+    }
+
+    public long getLimitNumberOfResult() {
+        return limitNumberOfResult;
+    }
+
+    public void setLimitNumberOfResult(long limitNumberOfResult) {
+        this.limitNumberOfResult = limitNumberOfResult;
     }
 
     @Override

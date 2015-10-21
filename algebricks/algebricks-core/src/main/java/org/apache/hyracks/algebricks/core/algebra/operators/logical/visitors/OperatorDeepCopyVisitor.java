@@ -228,7 +228,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
     public ILogicalOperator visitDataScanOperator(DataSourceScanOperator op, Void arg) throws AlgebricksException {
         ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
         newInputList.addAll(op.getVariables());
-        return new DataSourceScanOperator(newInputList, op.getDataSource());
+        return new DataSourceScanOperator(newInputList, op.getDataSource(), op.getLimitNumberOfResult());
     }
 
     @Override

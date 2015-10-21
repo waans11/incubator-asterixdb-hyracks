@@ -83,11 +83,13 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         List<LogicalVariable> vars = scan.getVariables();
         List<LogicalVariable> projectVars = scan.getProjectVariables();
+        long limitNumberOfResult = scan.getLimitNumberOfResult();
 
         Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> p;
         try {
-            p = mp.getScannerRuntime(dataSource, vars, projectVars, scan.isProjectPushed(), scan.getMinFilterVars(),
-                    scan.getMaxFilterVars(), opSchema, typeEnv, context, builder.getJobSpec(), implConfig);
+            p = mp.getScannerRuntime(dataSource, vars, projectVars, limitNumberOfResult, scan.isProjectPushed(),
+                    scan.getMinFilterVars(), scan.getMaxFilterVars(), opSchema, typeEnv, context, builder.getJobSpec(),
+                    implConfig);
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
