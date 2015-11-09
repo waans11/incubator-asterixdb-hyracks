@@ -110,8 +110,8 @@ public class PrimaryIndexSearchExample {
 
         // schema of tuples coming out of primary index
         RecordDescriptor recDesc = new RecordDescriptor(new ISerializerDeserializer[] {
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE,
-                IntegerSerializerDeserializer.INSTANCE, UTF8StringSerializerDeserializer.INSTANCE, });
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(),
+                IntegerSerializerDeserializer.INSTANCE, new UTF8StringSerializerDeserializer(), });
 
         // build tuple containing low and high search keys
         ArrayTupleBuilder tb = new ArrayTupleBuilder(comparatorFactories.length * 2); // high
@@ -128,8 +128,8 @@ public class PrimaryIndexSearchExample {
                                                                     // high key
         tb.addFieldEndOffset();
 
-        ISerializerDeserializer[] keyRecDescSers = { UTF8StringSerializerDeserializer.INSTANCE,
-                UTF8StringSerializerDeserializer.INSTANCE };
+        ISerializerDeserializer[] keyRecDescSers = { new UTF8StringSerializerDeserializer(),
+                new UTF8StringSerializerDeserializer() };
         RecordDescriptor keyRecDesc = new RecordDescriptor(keyRecDescSers);
 
         ConstantTupleSourceOperatorDescriptor keyProviderOp = new ConstantTupleSourceOperatorDescriptor(spec,

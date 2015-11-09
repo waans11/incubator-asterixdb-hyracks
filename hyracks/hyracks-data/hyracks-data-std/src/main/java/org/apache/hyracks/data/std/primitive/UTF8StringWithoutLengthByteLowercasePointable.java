@@ -20,7 +20,12 @@ import org.apache.hyracks.data.std.api.IComparableForStringWithoutLengthByte;
 import org.apache.hyracks.data.std.api.IHashableForStringWithoutLengthByte;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 
+/**
+ * This string pointable is for the UTF8 string that doesn't have length bytes in the beginning.
+ * Instead, the length of this string is provided as a parameter.
+ */
 public final class UTF8StringWithoutLengthByteLowercasePointable extends AbstractPointable implements
         IHashableForStringWithoutLengthByte, IComparableForStringWithoutLengthByte {
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
@@ -58,40 +63,14 @@ public final class UTF8StringWithoutLengthByteLowercasePointable extends Abstrac
     // If the length is given, this method assumes that it only receives the string literal
     // without length (2 byte) in the beginning.
     public int compareToWithoutLengthByte(byte[] bytes, int start, int length) {
-        int utflen1 = this.length;
-        int utflen2 = length;
-
-        int c1 = 0;
-        int c2 = 0;
-
-        int s1Start = this.start;
-        int s2Start = start;
-
-        while (c1 < utflen1 && c2 < utflen2) {
-            char ch1 = Character.toLowerCase(UTF8StringPointable.charAt(this.bytes, s1Start + c1));
-            char ch2 = Character.toLowerCase(UTF8StringPointable.charAt(bytes, s2Start + c2));
-
-            if (ch1 != ch2) {
-                return ch1 - ch2;
-            }
-            c1 += UTF8StringPointable.charSize(this.bytes, s1Start + c1);
-            c2 += UTF8StringPointable.charSize(bytes, s2Start + c2);
-        }
-        return utflen1 - utflen2;
+        return UTF8StringUtil.lowerCaseCompareTo(this.bytes, this.start, this.length, bytes, start, length);
     }
 
     // If the length is given, this method assumes that it only receives the string literal
     // without length (2 byte) in the beginning.
     @Override
     public int hash(int length) {
-        int h = 0;
-        int c = 0;
-        while (c < length) {
-            char ch = Character.toLowerCase(UTF8StringPointable.charAt(bytes, start + c));
-            h = 31 * h + ch;
-            c += UTF8StringPointable.charSize(bytes, start + c);
-        }
-        return h;
+        return UTF8StringUtil.lowerCaseHash(bytes, start, length);
     }
 
 }
