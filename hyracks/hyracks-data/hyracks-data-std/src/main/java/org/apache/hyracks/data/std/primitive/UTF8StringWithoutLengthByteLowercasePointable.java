@@ -16,12 +16,13 @@ package org.apache.hyracks.data.std.primitive;
 
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.data.std.api.AbstractPointable;
-import org.apache.hyracks.data.std.api.IComparable;
-import org.apache.hyracks.data.std.api.IHashable;
+import org.apache.hyracks.data.std.api.IComparableForStringWithoutLengthByte;
+import org.apache.hyracks.data.std.api.IHashableForStringWithoutLengthByte;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 
-public final class UTF8StringLowercasePointable extends AbstractPointable implements IHashable, IComparable {
+public final class UTF8StringWithoutLengthByteLowercasePointable extends AbstractPointable implements
+        IHashableForStringWithoutLengthByte, IComparableForStringWithoutLengthByte {
     public static final ITypeTraits TYPE_TRAITS = new ITypeTraits() {
         private static final long serialVersionUID = 1L;
 
@@ -41,7 +42,7 @@ public final class UTF8StringLowercasePointable extends AbstractPointable implem
 
         @Override
         public IPointable createPointable() {
-            return new UTF8StringLowercasePointable();
+            return new UTF8StringWithoutLengthByteLowercasePointable();
         }
 
         @Override
@@ -54,21 +55,17 @@ public final class UTF8StringLowercasePointable extends AbstractPointable implem
         return ((b[s] & 0xff) << 8) + ((b[s + 1] & 0xff) << 0);
     }
 
-    @Override
-    public int compareTo(IPointable pointer) {
-        return compareTo(pointer.getByteArray(), pointer.getStartOffset(), pointer.getLength());
-    }
-
-    @Override
-    public int compareTo(byte[] bytes, int start, int length) {
-        int utflen1 = getUTFLen(this.bytes, this.start);
-        int utflen2 = getUTFLen(bytes, start);
+    // If the length is given, this method assumes that it only receives the string literal
+    // without length (2 byte) in the beginning.
+    public int compareToWithoutLengthByte(byte[] bytes, int start, int length) {
+        int utflen1 = this.length;
+        int utflen2 = length;
 
         int c1 = 0;
         int c2 = 0;
 
-        int s1Start = this.start + 2;
-        int s2Start = start + 2;
+        int s1Start = this.start;
+        int s2Start = start;
 
         while (c1 < utflen1 && c2 < utflen2) {
             char ch1 = Character.toLowerCase(UTF8StringPointable.charAt(this.bytes, s1Start + c1));
@@ -83,18 +80,18 @@ public final class UTF8StringLowercasePointable extends AbstractPointable implem
         return utflen1 - utflen2;
     }
 
+    // If the length is given, this method assumes that it only receives the string literal
+    // without length (2 byte) in the beginning.
     @Override
-    public int hash() {
+    public int hash(int length) {
         int h = 0;
-        int utflen = getUTFLen(bytes, start);
-        int sStart = start + 2;
         int c = 0;
-
-        while (c < utflen) {
-            char ch = Character.toLowerCase(UTF8StringPointable.charAt(bytes, sStart + c));
+        while (c < length) {
+            char ch = Character.toLowerCase(UTF8StringPointable.charAt(bytes, start + c));
             h = 31 * h + ch;
-            c += UTF8StringPointable.charSize(bytes, sStart + c);
+            c += UTF8StringPointable.charSize(bytes, start + c);
         }
         return h;
     }
+
 }
