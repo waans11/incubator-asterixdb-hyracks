@@ -190,17 +190,31 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         accessor = new FrameTupleAccessor(inputRecDesc);
         writer.open();
 
+        // For left-outer-join case, we need to generate null fields from the index search.
         if (retainNull) {
             int fieldCount = getFieldCount();
+            // If we need to write down the result of searchOperationCallback.proceed(),
+            // one more field is required.
+            if (useOpercationCallbackProceedReturnResult) {
+                fieldCount++;
+            }
             nullTupleBuild = new ArrayTupleBuilder(fieldCount);
             DataOutput out = nullTupleBuild.getDataOutput();
+
             for (int i = 0; i < fieldCount; i++) {
                 try {
-                    nullWriter.writeNull(out);
+                    if (i == (fieldCount - 1) && useOpercationCallbackProceedReturnResult) {
+                        // We write the success result in the last field in case
+                        // we need to write down the result of searchOperationCallback.proceed().
+                        // This value can't be null.
+                        nullTupleBuild.addField(valuesForOpercationCallbackProceedReturnResult, 5, 5);
+                    } else {
+                        nullWriter.writeNull(out);
+                        nullTupleBuild.addFieldEndOffset();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                nullTupleBuild.addFieldEndOffset();
             }
         } else {
             nullTupleBuild = null;
@@ -337,8 +351,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         if (!useLimitNumberOfResult || (useLimitNumberOfResult && searchedTupleCount < limitNumberOfResult)) {
             accessor.reset(buffer);
             int tupleCount = accessor.getTupleCount();
-            LOGGER.log(LVL, "***** [Index-only experiment] total tuple count:" + tupleCount + " "
-                    + useLimitNumberOfResult);
+            if (useOpercationCallbackProceedReturnResult) {
+                LOGGER.log(LVL, "***** [Index-only experiment] total tuple count:" + tupleCount + " "
+                        + useLimitNumberOfResult);
+            }
             try {
                 for (int i = 0; i < tupleCount; i++) {
                     if (!useLimitNumberOfResult || (useLimitNumberOfResult && searchedTupleCount < limitNumberOfResult)) {

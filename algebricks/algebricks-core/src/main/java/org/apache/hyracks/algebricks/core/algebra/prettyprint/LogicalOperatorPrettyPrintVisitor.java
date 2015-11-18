@@ -21,7 +21,6 @@ package org.apache.hyracks.algebricks.core.algebra.prettyprint;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
-
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
@@ -44,6 +43,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator.Kind;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -165,6 +165,10 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
                 }
             }
             buffer.append("(" + fst + ", " + p.second.getValue().accept(exprVisitor, indent) + ") ");
+
+            if (op.getTopK() != -1) {
+                buffer.append("(topK: " + op.getTopK() + ")");
+            }
         }
         return buffer.toString();
     }
@@ -261,6 +265,16 @@ public class LogicalOperatorPrettyPrintVisitor implements ILogicalOperatorVisito
         StringBuilder buffer = new StringBuilder();
         addIndent(buffer, indent).append(
                 "unnest-map " + op.getVariables() + " <- "
+                        + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        return buffer.toString();
+    }
+
+    @Override
+    public String visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Integer indent)
+            throws AlgebricksException {
+        StringBuilder buffer = new StringBuilder();
+        addIndent(buffer, indent).append(
+                "left-outer-unnest-map " + op.getVariables() + " <- "
                         + op.getExpressionRef().getValue().accept(exprVisitor, indent));
         return buffer.toString();
     }

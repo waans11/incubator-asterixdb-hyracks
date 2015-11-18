@@ -50,6 +50,7 @@ public enum LogicalOperatorTag {
     UNIONALL,
     UNNEST,
     UNNEST_MAP,
+    LEFT_OUTER_UNNEST_MAP,
     UPDATE,
     WRITE,
     WRITE_RESULT,

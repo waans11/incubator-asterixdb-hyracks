@@ -60,6 +60,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -483,6 +484,27 @@ public class FDsAndEquivClassesVisitor implements ILogicalOperatorVisitor<Void, 
     @Override
     public Void visitUnnestMapOperator(UnnestMapOperator op, IOptimizationContext ctx) throws AlgebricksException {
         fdsEqClassesForAbstractUnnestOperator(op, ctx);
+        return null;
+    }
+
+    @Override
+    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, IOptimizationContext ctx)
+            throws AlgebricksException {
+        // Unlike unnest-map, we propagate all inputs.
+        Map<LogicalVariable, EquivalenceClass> equivalenceClasses = new HashMap<LogicalVariable, EquivalenceClass>();
+        List<FunctionalDependency> functionalDependencies = new ArrayList<FunctionalDependency>();
+        ctx.putEquivalenceClassMap(op, equivalenceClasses);
+        ctx.putFDList(op, functionalDependencies);
+        ILogicalOperator childOp = op.getInputs().get(0).getValue();
+        functionalDependencies.addAll(getOrComputeFDs(childOp, ctx));
+        equivalenceClasses.putAll(getOrComputeEqClasses(childOp, ctx));
+
+        // Like Left-Outer join case, we add functional dependencies.
+        List<LogicalVariable> leftSideVars = new ArrayList<LogicalVariable>();
+        List<LogicalVariable> producedVars = new ArrayList<LogicalVariable>();
+        VariableUtilities.getUsedVariables(op, leftSideVars);
+        VariableUtilities.getProducedVariables(op, leftSideVars);
+        functionalDependencies.add(new FunctionalDependency(leftSideVars, producedVars));
         return null;
     }
 

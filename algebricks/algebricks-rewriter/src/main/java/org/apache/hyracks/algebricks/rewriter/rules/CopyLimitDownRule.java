@@ -100,6 +100,12 @@ public class CopyLimitDownRule implements IAlgebraicRewriteRule {
                     || !OperatorPropertiesUtil.disjoint(limitUsedVars, candidateProducedVars)
                     || candidateOp.canDecreaseCardinality() != canDecreaseCardinalityCode.FALSE) {
                 break;
+            } else if (candidateOp.getOperatorTag() == LogicalOperatorTag.LIMIT) {
+                LimitOperator anotherLimitOp = (LimitOperator) candidateOp;
+                if (anotherLimitOp.getMaxObjects().equals(limitOp.getMaxObjects())) {
+                    safeOpRef = null;
+                    break;
+                }
             }
 
             if (orderByExistsInThePlan && candidateOp.canPreserveOrder() != canPreserveOrderCode.TRUE) {

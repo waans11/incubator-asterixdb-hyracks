@@ -95,17 +95,26 @@ public class OrderOperator extends AbstractLogicalOperator {
     };
 
     private final List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions;
+    // in case we can push down LIMIT information into this operator
+    protected int topK;
 
     // These are pairs of type (comparison, expr) where comparison is
     // ASC or DESC or a boolean function of arity 2 that can take as
     // arguments results of expr.
 
+    // TopK : -1 means there is no LIMIT push-down optimization applied to this operator.
     public OrderOperator() {
         orderExpressions = new ArrayList<Pair<IOrder, Mutable<ILogicalExpression>>>();
+        topK = -1;
     }
 
     public OrderOperator(List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions) {
+        this(orderExpressions, -1);
+    }
+
+    public OrderOperator(List<Pair<IOrder, Mutable<ILogicalExpression>>> orderExpressions, int topK) {
         this.orderExpressions = orderExpressions;
+        this.topK = topK;
     }
 
     @Override
@@ -170,4 +179,11 @@ public class OrderOperator extends AbstractLogicalOperator {
         return canPreserveOrderCode.FALSE;
     }
 
+    public void setTopK(int topK) {
+        this.topK = topK;
+    }
+
+    public int getTopK() {
+        return topK;
+    }
 }

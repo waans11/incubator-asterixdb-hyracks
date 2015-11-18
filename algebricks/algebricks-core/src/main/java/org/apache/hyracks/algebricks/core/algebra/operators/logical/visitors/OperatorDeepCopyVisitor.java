@@ -46,6 +46,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.IndexInsertD
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.MaterializeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.NestedTupleSourceOperator;
@@ -222,6 +223,15 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         newInputList.addAll(op.getVariables());
         return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()), new ArrayList<Object>(
                 op.getVariableTypes()), op.propagatesInput());
+    }
+
+    @Override
+    public ILogicalOperator visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg)
+            throws AlgebricksException {
+        ArrayList<LogicalVariable> newInputList = new ArrayList<LogicalVariable>();
+        newInputList.addAll(op.getVariables());
+        return new LeftOuterUnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
+                new ArrayList<Object>(op.getVariableTypes()));
     }
 
     @Override

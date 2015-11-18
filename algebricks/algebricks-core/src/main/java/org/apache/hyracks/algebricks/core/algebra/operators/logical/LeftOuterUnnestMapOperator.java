@@ -28,62 +28,46 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
-import org.apache.hyracks.algebricks.core.algebra.typing.NonPropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 /**
- * This operator may go away after we add indexes to Algebricks.
+ * Left-outer-unnest-map is similar to unnest-map operator.
+ * The only difference is this represents left-outer semantics, meaning that
+ * it generates null values for non-matching tuples. It also propagates all input variables.
+ * This may be used only in a left-outer-join case.
  */
-public class UnnestMapOperator extends AbstractUnnestOperator {
+public class LeftOuterUnnestMapOperator extends AbstractUnnestOperator {
 
-    private final List<Object> variableTypes; // TODO: get rid of this and  deprecate UnnestMap
-    private boolean propagateInput;
-    // Generate null values for non-matching tuples.
-    // If propageInput and retainNull are both true, then consider using LeftOuterUnnestMap operator
-    // since it is right for these cases (e.g., left-outer-join case)
-    private boolean retainNull;
+    private final List<Object> variableTypes;
 
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
     private List<LogicalVariable> minFilterVars;
     private List<LogicalVariable> maxFilterVars;
 
-    public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
-            List<Object> variableTypes, boolean propagateInput) {
-        this(variables, expression, variableTypes, propagateInput, false);
-    }
-
-    public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
-            List<Object> variableTypes, boolean propagateInput, boolean retainNull) {
+    public LeftOuterUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
+            List<Object> variableTypes) {
         super(variables, expression);
         this.variableTypes = variableTypes;
-        this.propagateInput = propagateInput;
-        this.retainNull = retainNull;
     }
 
     @Override
     public LogicalOperatorTag getOperatorTag() {
-        return LogicalOperatorTag.UNNEST_MAP;
+        return LogicalOperatorTag.LEFT_OUTER_UNNEST_MAP;
     }
 
     @Override
     public <R, T> R accept(ILogicalOperatorVisitor<R, T> visitor, T arg) throws AlgebricksException {
-        return visitor.visitUnnestMapOperator(this, arg);
+        return visitor.visitLeftOuterUnnestMapOperator(this, arg);
     }
 
-    /**
-     * UnnestMap doesn't propagate input variables, because currently it is only
-     * used to search indexes. In the future, it would be nice to have the
-     * choice to propagate input variables or not.
-     */
+    // LeftOuterUnnestMap propagates all input variables.
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
         return new VariablePropagationPolicy() {
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources)
                     throws AlgebricksException {
-                if (propagateInput) {
-                    target.addAllVariables(sources[0]);
-                }
+                target.addAllVariables(sources[0]);
                 for (LogicalVariable v : variables) {
                     target.addVariable(v);
                 }
@@ -98,11 +82,7 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
     @Override
     public IVariableTypeEnvironment computeOutputTypeEnvironment(ITypingContext ctx) throws AlgebricksException {
         IVariableTypeEnvironment env = null;
-        if (propagateInput) {
-            env = createPropagatingAllInputsTypeEnvironment(ctx);
-        } else {
-            env = new NonPropagatingTypeEnvironment(ctx.getExpressionTypeComputer(), ctx.getMetadataProvider());
-        }
+        env = createPropagatingAllInputsTypeEnvironment(ctx);
         int n = variables.size();
         for (int i = 0; i < n; i++) {
             env.setVarType(variables.get(i), variableTypes.get(i));
@@ -111,15 +91,8 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
     }
 
     public boolean propagatesInput() {
-        return propagateInput;
-    }
-
-    public boolean getRetainNull() {
-        return retainNull;
-    }
-
-    public void setRetainNull(boolean retainNull) {
-        this.retainNull = retainNull;
+        // This method exists to be compatible with unnest-map.
+        return true;
     }
 
     public List<LogicalVariable> getMinFilterVars() {
@@ -144,24 +117,6 @@ public class UnnestMapOperator extends AbstractUnnestOperator {
 
     public List<Mutable<ILogicalExpression>> getAdditionalFilteringExpressions() {
         return additionalFilteringExpressions;
-    }
-
-    @Override
-    public canDecreaseCardinalityCode canDecreaseCardinality() {
-        if (retainNull) {
-            return canDecreaseCardinalityCode.FALSE;
-        } else {
-            return canDecreaseCardinalityCode.TRUE;
-        }
-    }
-
-    @Override
-    public canPreserveOrderCode canPreserveOrder() {
-        if (retainNull) {
-            return canPreserveOrderCode.TRUE;
-        } else {
-            return canPreserveOrderCode.FALSE;
-        }
     }
 
     /*
