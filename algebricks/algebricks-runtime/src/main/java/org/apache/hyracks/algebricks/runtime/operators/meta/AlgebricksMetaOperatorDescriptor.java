@@ -108,7 +108,10 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
                 try {
                     startOfPipeline.open();
                 } catch (HyracksDataException e) {
+                    // Tell the downstream the job fails.
                     startOfPipeline.fail();
+                    // Throws the exception.
+                    throw e;
                 } finally {
                     startOfPipeline.close();
                 }

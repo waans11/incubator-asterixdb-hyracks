@@ -91,6 +91,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public abstract LogicalOperatorTag getOperatorTag();
 
+    @Override
     public ExecutionMode getExecutionMode() {
         return mode;
     }
@@ -169,7 +170,7 @@ public abstract class AbstractLogicalOperator implements ILogicalOperator {
     @Override
     public final void contributeRuntimeOperator(IHyracksJobBuilder builder, JobGenContext context,
             IOperatorSchema propagatedSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
-            throws AlgebricksException {
+                    throws AlgebricksException {
         if (bJobGenEnabled) {
             if (physicalOperator == null) {
                 throw new AlgebricksException("Physical operator not set for operator: " + this);

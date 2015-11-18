@@ -16,43 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.base;
+package org.apache.hyracks.storage.common;
 
-public enum LogicalOperatorTag {
-    AGGREGATE,
-    ASSIGN,
-    DATASOURCESCAN,
-    DISTINCT,
-    DISTRIBUTE_RESULT,
-    EMPTYTUPLESOURCE,
-    EXCHANGE,
-    EXTENSION_OPERATOR,
-    EXTERNAL_LOOKUP,
-    GROUP,
-    INDEX_INSERT_DELETE,
-    INNERJOIN,
-    INSERT_DELETE,
-    LEFTOUTERJOIN,
-    LIMIT,
-    MATERIALIZE,
-    NESTEDTUPLESOURCE,
-    ORDER,
-    PARTITIONINGSPLIT,
-    PROJECT,
-    REPLICATE,
-    RUNNINGAGGREGATE,
-    SCRIPT,
-    SELECT,
-    SINK,
-    SPLIT,
-    SUBPLAN,
-    TOKENIZE,
-    UNIONALL,
-    UNNEST,
-    OUTER_UNNEST,
-    UNNEST_MAP,
-    LEFT_OUTER_UNNEST_MAP,
-    UPDATE,
-    WRITE,
-    WRITE_RESULT,
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+public interface IResourceMemoryManager {
+    void allocateMemory(String resourceName) throws HyracksDataException;
 }
