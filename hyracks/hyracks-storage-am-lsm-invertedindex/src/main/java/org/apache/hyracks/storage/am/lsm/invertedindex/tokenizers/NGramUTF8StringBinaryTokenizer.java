@@ -42,6 +42,7 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
     @Override
     public boolean hasNext() {
         if (gramNum < totalGrams) {
+            System.out.println(gramNum + " " + totalGrams);
             return true;
         } else {
             return false;
@@ -78,8 +79,8 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
                 tokenCount++; // assume found
                 int offset = 0;
                 for (int j = 0; j < gramLength; j++) {
-                    if (Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset))
-                            != Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tmpIndex + offset))) {
+                    if (Character.toLowerCase(UTF8StringUtil.charAt(sentenceBytes, currentTokenStart + offset)) != Character
+                            .toLowerCase(UTF8StringUtil.charAt(sentenceBytes, tmpIndex + offset))) {
                         tokenCount--;
                         break;
                     }
@@ -109,7 +110,11 @@ public class NGramUTF8StringBinaryTokenizer extends AbstractUTF8StringBinaryToke
         if (usePrePost) {
             totalGrams = numChars + gramLength - 1;
         } else {
-            totalGrams = numChars - gramLength + 1;
+            if (length >= gramLength) {
+                totalGrams = numChars - gramLength + 1;
+            } else {
+                totalGrams = 0;
+            }
         }
     }
 

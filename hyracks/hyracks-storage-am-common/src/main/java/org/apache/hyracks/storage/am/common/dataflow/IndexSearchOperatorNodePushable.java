@@ -239,6 +239,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected void writeSearchResults(int tupleIndex) throws Exception {
         boolean matched = false;
+
+        // Temporary
+        //        int count = 0;
+
         if (useLimitNumberOfResult) {
             LOGGER.log(LVL, "***** [Index-only experiment] INDEX-SEARCH LIMIT push-down will be applied. LIMIT count:"
                     + limitNumberOfResult + " searched count: " + searchedTupleCount);
@@ -325,6 +329,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 }
             }
 
+            // Temporary
+            //            count++;
+
         }
 
         if (!matched && retainInput && retainNull) {
@@ -339,6 +346,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                         nullTupleBuild.getSize(), profilerSW);
             }
         }
+
+        // Temporary
+        //        LOGGER.log(LVL, "index - " + this.index.toString() + " result count:" + count);
     }
 
     @Override
@@ -352,8 +362,10 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             accessor.reset(buffer);
             int tupleCount = accessor.getTupleCount();
             if (useOpercationCallbackProceedReturnResult) {
-                LOGGER.log(LVL, "***** [Index-only experiment] total tuple count:" + tupleCount + " "
-                        + useLimitNumberOfResult);
+                LOGGER.log(LVL,
+                        "***** [Index-only experiment] total tuple count:" + tupleCount + " LIMIT applied: "
+                                + useLimitNumberOfResult + " rec size: " + inputRecDesc.getFieldCount() + " "
+                                + recordDesc.getFieldCount() + " " + outputRecDesc.getFieldCount());
             }
             try {
                 for (int i = 0; i < tupleCount; i++) {
