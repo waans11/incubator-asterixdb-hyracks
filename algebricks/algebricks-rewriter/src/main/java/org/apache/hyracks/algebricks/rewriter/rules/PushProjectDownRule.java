@@ -60,13 +60,13 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         if (op.getOperatorTag() != LogicalOperatorTag.PROJECT) {
             return false;
         }
-        ProjectOperator pi = (ProjectOperator) op;
-        Mutable<ILogicalOperator> opRef2 = pi.getInputs().get(0);
+        ProjectOperator projectOp = (ProjectOperator) op;
+        Mutable<ILogicalOperator> childOpRef = projectOp.getInputs().get(0);
 
-        HashSet<LogicalVariable> toPush = new HashSet<LogicalVariable>();
-        toPush.addAll(pi.getVariables());
+        HashSet<LogicalVariable> variablesToPush = new HashSet<LogicalVariable>();
+        variablesToPush.addAll(projectOp.getVariables());
 
-        Pair<Boolean, Boolean> p = pushThroughOp(toPush, opRef2, op, context);
+        Pair<Boolean, Boolean> p = pushThroughOp(variablesToPush, childOpRef, op, context);
         boolean smthWasPushed = p.first;
         if (p.second) { // the original projection is redundant
             opRef.setValue(op.getInputs().get(0).getValue());
@@ -76,84 +76,86 @@ public class PushProjectDownRule implements IAlgebraicRewriteRule {
         return smthWasPushed;
     }
 
-    private static Pair<Boolean, Boolean> pushThroughOp(HashSet<LogicalVariable> toPush,
-            Mutable<ILogicalOperator> opRef2, ILogicalOperator initialOp, IOptimizationContext context)
+    private static Pair<Boolean, Boolean> pushThroughOp(HashSet<LogicalVariable> variablesToPush,
+            Mutable<ILogicalOperator> childOpRef, ILogicalOperator initialOp, IOptimizationContext context)
             throws AlgebricksException {
-        List<LogicalVariable> initProjectList = new ArrayList<LogicalVariable>(toPush);
-        AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
+        List<LogicalVariable> initialProjectList = new ArrayList<LogicalVariable>(variablesToPush);
+        AbstractLogicalOperator childOp = (AbstractLogicalOperator) childOpRef.getValue();
         do {
-            if (op2.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE
-                    || op2.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE
-                    || op2.getOperatorTag() == LogicalOperatorTag.PROJECT
-                    || op2.getOperatorTag() == LogicalOperatorTag.REPLICATE
-                    || op2.getOperatorTag() == LogicalOperatorTag.SPLIT
-                    || op2.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+            if (childOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE
+                    || childOp.getOperatorTag() == LogicalOperatorTag.NESTEDTUPLESOURCE
+                    || childOp.getOperatorTag() == LogicalOperatorTag.PROJECT
+                    || childOp.getOperatorTag() == LogicalOperatorTag.REPLICATE
+                    || childOp.getOperatorTag() == LogicalOperatorTag.SPLIT
+                    || childOp.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
                 return new Pair<Boolean, Boolean>(false, false);
             }
-            if (!op2.isMap()) {
+            if (!childOp.isMap()) {
                 break;
             }
-            LinkedList<LogicalVariable> usedVars = new LinkedList<LogicalVariable>();
-            VariableUtilities.getUsedVariables(op2, usedVars);
-            toPush.addAll(usedVars);
-            LinkedList<LogicalVariable> producedVars = new LinkedList<LogicalVariable>();
-            VariableUtilities.getProducedVariables(op2, producedVars);
-            toPush.removeAll(producedVars);
-            // we assume pipelineable ops. have only one input
-            opRef2 = op2.getInputs().get(0);
-            op2 = (AbstractLogicalOperator) opRef2.getValue();
+            LinkedList<LogicalVariable> childOpUsedVars = new LinkedList<LogicalVariable>();
+            VariableUtilities.getUsedVariables(childOp, childOpUsedVars);
+            variablesToPush.addAll(childOpUsedVars);
+
+            LinkedList<LogicalVariable> childOpProducedVars = new LinkedList<LogicalVariable>();
+            VariableUtilities.getProducedVariables(childOp, childOpProducedVars);
+            variablesToPush.removeAll(childOpProducedVars);
+
+            // We assume pipeline-able ops that has only one input.
+            childOpRef = childOp.getInputs().get(0);
+            childOp = (AbstractLogicalOperator) childOpRef.getValue();
         } while (true);
 
-        LinkedList<LogicalVariable> produced2 = new LinkedList<LogicalVariable>();
-        VariableUtilities.getProducedVariables(op2, produced2);
-        LinkedList<LogicalVariable> used2 = new LinkedList<LogicalVariable>();
-        VariableUtilities.getUsedVariables(op2, used2);
+        LinkedList<LogicalVariable> producedVars2 = new LinkedList<LogicalVariable>();
+        VariableUtilities.getProducedVariables(childOp, producedVars2);
+        LinkedList<LogicalVariable> usedVars2 = new LinkedList<LogicalVariable>();
+        VariableUtilities.getUsedVariables(childOp, usedVars2);
 
-        boolean canCommuteProjection = initProjectList.containsAll(toPush) && initProjectList.containsAll(produced2)
-                && initProjectList.containsAll(used2);
-        // if true, we can get rid of the initial projection
+        // If true, we can get rid of the initial projection.
+        boolean canCommuteProjection = initialProjectList.containsAll(variablesToPush)
+                && initialProjectList.containsAll(producedVars2) && initialProjectList.containsAll(usedVars2);
 
-        // get rid of useless decor vars.
-        if (!canCommuteProjection && op2.getOperatorTag() == LogicalOperatorTag.GROUP) {
+        // Get rid of useless decor variables in the GROUP-BY operator.
+        if (!canCommuteProjection && childOp.getOperatorTag() == LogicalOperatorTag.GROUP) {
             boolean gbyChanged = false;
-            GroupByOperator gby = (GroupByOperator) op2;
+            GroupByOperator gbyOp = (GroupByOperator) childOp;
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> newDecorList = new ArrayList<Pair<LogicalVariable, Mutable<ILogicalExpression>>>();
-            for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gby.getDecorList()) {
+            for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : gbyOp.getDecorList()) {
                 LogicalVariable decorVar = GroupByOperator.getDecorVariable(p);
-                if (!toPush.contains(decorVar)) {
-                    used2.remove(decorVar);
+                if (!variablesToPush.contains(decorVar)) {
+                    usedVars2.remove(decorVar);
                     gbyChanged = true;
                 } else {
                     newDecorList.add(p);
                 }
             }
-            gby.getDecorList().clear();
-            gby.getDecorList().addAll(newDecorList);
+            gbyOp.getDecorList().clear();
+            gbyOp.getDecorList().addAll(newDecorList);
             if (gbyChanged) {
-                context.computeAndSetTypeEnvironmentForOperator(gby);
+                context.computeAndSetTypeEnvironmentForOperator(gbyOp);
             }
         }
-        used2.clear();
-        VariableUtilities.getUsedVariables(op2, used2);
+        usedVars2.clear();
+        VariableUtilities.getUsedVariables(childOp, usedVars2);
 
-        toPush.addAll(used2); // remember that toPush is a Set
-        toPush.removeAll(produced2);
+        variablesToPush.addAll(usedVars2); // remember that toPush is a Set
+        variablesToPush.removeAll(producedVars2);
 
-        if (toPush.isEmpty()) {
+        if (variablesToPush.isEmpty()) {
             return new Pair<Boolean, Boolean>(false, false);
         }
 
         boolean smthWasPushed = false;
-        for (Mutable<ILogicalOperator> c : op2.getInputs()) {
-            if (pushNeededProjections(toPush, c, context, initialOp)) {
+        for (Mutable<ILogicalOperator> c : childOp.getInputs()) {
+            if (pushNeededProjections(variablesToPush, c, context, initialOp)) {
                 smthWasPushed = true;
             }
         }
-        if (op2.hasNestedPlans()) {
-            AbstractOperatorWithNestedPlans n = (AbstractOperatorWithNestedPlans) op2;
+        if (childOp.hasNestedPlans()) {
+            AbstractOperatorWithNestedPlans n = (AbstractOperatorWithNestedPlans) childOp;
             for (ILogicalPlan p : n.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
-                    if (pushNeededProjections(toPush, r, context, initialOp)) {
+                    if (pushNeededProjections(variablesToPush, r, context, initialOp)) {
                         smthWasPushed = true;
                     }
                 }
